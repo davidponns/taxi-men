@@ -752,11 +752,10 @@ async function _fetchAPI(fechaISO) {
       return res.json();
     }
 
-    // Dos llamadas en paralelo: 00:00–11:59 y 12:00–23:59
-    const [data1, data2] = await Promise.all([
-      fetchRango(`${fechaISO}T00:00`, `${fechaISO}T11:59`),
-      fetchRango(`${fechaISO}T12:00`, `${fechaISO}T23:59`),
-    ]);
+    // Dos llamadas en secuencia con pausa (plan BASIC: 1 req/seg)
+    const data1 = await fetchRango(`${fechaISO}T00:00`, `${fechaISO}T11:59`);
+    await new Promise(r => setTimeout(r, 1100)); // esperar 1.1s entre llamadas
+    const data2 = await fetchRango(`${fechaISO}T12:00`, `${fechaISO}T23:59`);
 
     // Combinar resultados
     const data = {
@@ -781,15 +780,15 @@ async function _fetchAPI(fechaISO) {
       ? 'Sin respuesta (>8s) · revisa tu conexión'
       : err.message;
     document.getElementById("api-note").innerHTML =
-      `⚠ No se pudieron cargar los vuelos · <span style="color:var(--muted);font-size:11px">${msg}</span>`;
+      `⚠ ${msg}`;
     document.getElementById("vuelos-list").innerHTML =
-      `<div class="empty" style="color:var(--red)">⚠ Sin conexión con AeroDataBox<br>
-       <span style="font-size:12px;color:var(--muted)">Comprueba tu conexión e inténtalo de nuevo</span><br><br>
-       <button onclick="location.reload()" style="background:var(--accent);border:none;border-radius:8px;color:#fff;padding:8px 16px;font-size:13px;cursor:pointer">Reintentar</button>
+      `<div class="empty">
+        <div style="color:var(--red);font-size:14px;margin-bottom:8px">⚠ Error al cargar vuelos</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;word-break:break-word">${msg}</div>
+        <button onclick="location.reload()" style="background:var(--accent);border:none;border-radius:8px;color:#fff;padding:8px 16px;font-size:13px;cursor:pointer;font-family:var(--font)">Reintentar</button>
        </div>`;
     document.getElementById("vuelo-chips-activos").innerHTML =
       `<span class="vuelo-chip none">Sin datos de vuelos</span>`;
-    // Renderizar predicción vacía
     renderSlots();
     renderParadas();
     renderVueloChips(activeSlot);
