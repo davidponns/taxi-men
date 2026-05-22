@@ -670,26 +670,40 @@ const IATA_PAIS = {
 };
 
 function parsearVuelosAPI(data) {
-  if (!data || !data.departures) {
-    console.warn("[TaxiCiuta] Sin campo 'departures' en respuesta");
+  // Loguear estructura para diagnóstico
+  const keys = data ? Object.keys(data) : [];
+  console.log("[TaxiCiuta] Campos respuesta API:", keys);
+
+  // AeroDataBox puede devolver 'departures', 'flights' o array directo
+  const lista = data?.departures || data?.flights || (Array.isArray(data) ? data : null);
+
+  if (!lista || !lista.length) {
+    console.warn("[TaxiCiuta] Sin vuelos. Estructura recibida:", JSON.stringify(data).substring(0, 300));
     return [];
   }
-  return data.departures
-    .filter(f => f.departure?.scheduledTimeLocal && f.arrival?.airport?.iata)
+
+  console.log("[TaxiCiuta] Vuelos encontrados:", lista.length, "— primer item:", JSON.stringify(lista[0]).substring(0,200));
+
+  return lista
+    .filter(f => {
+      // Aceptar scheduledTimeLocal o scheduledTimeUtc
+      const tieneHora = f.departure?.scheduledTimeLocal || f.departure?.scheduledTimeUtc
+        || f.movement?.scheduledTimeLocal || f.movement?.scheduledTimeUtc;
+      const tieneDestino = f.arrival?.airport?.iata || f.arrival?.airport?.icao;
+      return tieneHora && tieneDestino;
+    })
     .map(f => {
-      const horaRaw = f.departure.scheduledTimeLocal; // "2025-05-21 08:30+02:00"
-      const hora = horaRaw.substring(11,16); // "08:30"
-      const iata = f.arrival.airport.iata;
-      const nombre = f.arrival.airport.name || iata;
-      const aerolinea = f.airline?.name || f.number || "";
+      // Hora: scheduledTimeLocal tiene formato "2025-05-21 08:30+02:00" o "2025-05-21T08:30:00+02:00"
+      const horaRaw = f.departure?.scheduledTimeLocal || f.departure?.scheduledTimeUtc
+        || f.movement?.scheduledTimeLocal || f.movement?.scheduledTimeUtc || "";
+      // Extraer HH:mm sea cual sea el formato
+      const horaMatch = horaRaw.match(/[T ](\d{2}:\d{2})/);
+      const hora = horaMatch ? horaMatch[1] : horaRaw.substring(11,16);
+      const iata = f.arrival?.airport?.iata || f.arrival?.airport?.icao || "???";
+      const nombre = f.arrival?.airport?.name || iata;
+      const aerolinea = f.airline?.name || f.airline?.iata || f.number || f.callSign || "";
       const flag = IATA_PAIS[iata] || "🌍";
-      return {
-        hora,
-        destino: `${nombre} (${iata})`,
-        destino_iata: iata,
-        aerolinea,
-        pais_flag: flag,
-      };
+      return { hora, destino: `${nombre} (${iata})`, destino_iata: iata, aerolinea, pais_flag: flag };
     })
     .sort((a,b) => a.hora.localeCompare(b.hora));
 }
@@ -757,13 +771,15 @@ async function _fetchAPI(fechaISO) {
     await new Promise(r => setTimeout(r, 1100)); // esperar 1.1s entre llamadas
     const data2 = await fetchRango(`${fechaISO}T12:00`, `${fechaISO}T23:59`);
 
-    // Combinar resultados
-    const data = {
-      departures: [
-        ...(data1.departures || []),
-        ...(data2.departures || []),
-      ]
-    };
+    // Loguear respuestas crudas para diagnóstico
+    console.log("[TaxiCiuta] data1 keys:", Object.keys(data1));
+    console.log("[TaxiCiuta] data2 keys:", Object.keys(data2));
+
+    // Combinar — acepta 'departures' o 'flights'
+    const arr1 = data1.departures || data1.flights || [];
+    const arr2 = data2.departures || data2.flights || [];
+    console.log("[TaxiCiuta] vuelos mañana:", arr1.length, "vuelos tarde:", arr2.length);
+    const data = { departures: [...arr1, ...arr2] };
     const parsed = parsearVuelosAPI(data);
     if (!parsed.length) throw new Error("Sin vuelos");
     vuelos = parsed;
