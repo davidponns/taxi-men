@@ -757,15 +757,16 @@ async function _fetchAPI(fechaISO) {
 }
 
 function _renderTodo() {
-  renderTabVuelos();
   const now = ahora();
   const slots = generarSlots();
   const futuros = slots.filter(s => s >= now - 15);
+  // Siempre recalcular el mejor slot cuando llegan nuevos vuelos
   const actividadMax = futuros.reduce((best, s) => {
     const a = calcularActividad(s);
     return a > best.a ? {s, a} : best;
   }, {s: futuros[0] || slots[0], a: 0});
-  if (!activeSlot) activeSlot = actividadMax.s;
+  activeSlot = actividadMax.s;
+  renderTabVuelos();
   renderSlots();
   renderParadas();
   renderVueloChips(activeSlot);
@@ -883,7 +884,7 @@ function addHotel(paradaId) {
   const estrellas = parseInt(document.getElementById("hst-"+paradaId).value) || 3;
   if (!nombre) return;
   // Recoger todas las filas de nacionalidad añadidas
-  const nacRows = document.querySelectorAll(\`.nac-row-\${paradaId}\`);
+  const nacRows = document.getElementsByClassName('nac-row-' + paradaId);
   const nacs = [];
   nacRows.forEach(row => {
     const pais = row.querySelector(".nac-pais").value;
