@@ -730,12 +730,13 @@ async function cargarVuelos() {
 
 async function _fetchAPI(fechaISO) {
   try {
+    // Formato exacto requerido por AeroDataBox: YYYY-MM-DDTHH:mm
     const fromLocal = `${fechaISO}T00:00`;
     const toLocal   = `${fechaISO}T23:59`;
-    const apiUrl = `https://aerodatabox.p.rapidapi.com/flights/airports/icao/${AIRPORT_ICAO}/${fromLocal}/${toLocal}?withLeg=false&direction=Departure&withCancelled=false&withCodeshared=true&withCargo=false&withPrivate=false`;
-    // Timeout de 8 segundos para no bloquear la app
+    // Parámetros mínimos y correctos — sin withCodeshared que causa 400
+    const apiUrl = `https://aerodatabox.p.rapidapi.com/flights/airports/icao/${AIRPORT_ICAO}/${fromLocal}/${toLocal}?direction=Departure&withCancelled=false&withCargo=false&withPrivate=false`;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 10000);
     const res = await fetch(apiUrl, {
       method: "GET",
       signal: controller.signal,
@@ -745,7 +746,12 @@ async function _fetchAPI(fechaISO) {
       }
     });
     clearTimeout(timeout);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+      // Leer el cuerpo del error para diagnóstico
+      let errBody = "";
+      try { errBody = await res.text(); } catch(e) {}
+      throw new Error(`HTTP ${res.status}${errBody ? ": " + errBody.substring(0,100) : ""}`);
+    }
     const data = await res.json();
     const parsed = parsearVuelosAPI(data);
     if (!parsed.length) throw new Error("Sin vuelos");
