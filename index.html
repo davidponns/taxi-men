@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0f1e">
+<title>TaxiMAH · Ciutadella</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0f1e;
+  --bg2: #111827;
+  --bg3: #1a2335;
+  --border: rgba(255,255,255,0.08);
+  --text: #f0f4ff;
+  --muted: #6b7a99;
+  --accent: #3b82f6;
+  --accent2: #06b6d4;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --font: 'Outfit', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; background:var(--bg); color:var(--text); font-family:var(--font); overscroll-behavior:none; }
+
+/* ── layout ── */
+.app { display:flex; flex-direction:column; height:100dvh; max-width:480px; margin:0 auto; }
+
+/* ── header ── */
+.header { padding: 52px 20px 16px; background: linear-gradient(180deg, #0d1526 0%, transparent 100%); flex-shrink:0; }
+.header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+.logo { font-family:var(--mono); font-size:13px; color:var(--accent2); letter-spacing:0.12em; }
+.date-badge { font-size:12px; color:var(--muted); font-family:var(--mono); }
+.header h1 { font-size:26px; font-weight:600; letter-spacing:-0.02em; line-height:1.1; }
+.header h1 span { color:var(--accent2); }
+.subtitle { font-size:13px; color:var(--muted); margin-top:4px; }
+
+/* ── nav ── */
+.nav { display:flex; gap:0; padding:0 20px; margin-bottom:0; flex-shrink:0; border-bottom:1px solid var(--border); }
+.nav-btn { flex:1; padding:12px 0; font-size:13px; font-weight:500; background:none; border:none; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.2s; font-family:var(--font); }
+.nav-btn.active { color:var(--accent2); border-bottom-color:var(--accent2); }
+
+/* ── scrollable content ── */
+.content { flex:1; overflow-y:auto; padding:16px 20px 32px; }
+.content::-webkit-scrollbar { display:none; }
+
+/* ── section ── */
+.section { display:none; }
+.section.active { display:block; }
+
+/* ── now bar ── */
+.now-bar { background:var(--bg3); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+.now-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); flex-shrink:0; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.now-text { font-size:13px; color:var(--muted); flex:1; }
+.now-time { font-family:var(--mono); font-size:18px; font-weight:500; color:var(--text); }
+
+/* ── slot selector ── */
+.slot-label { font-size:11px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:8px; font-family:var(--mono); }
+.slot-scroll { display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; margin-bottom:16px; }
+.slot-scroll::-webkit-scrollbar { display:none; }
+.slot-btn { flex-shrink:0; padding:7px 14px; border-radius:20px; border:1px solid var(--border); background:var(--bg3); color:var(--muted); font-size:13px; font-family:var(--mono); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.slot-btn:hover { border-color:var(--accent); color:var(--text); }
+.slot-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500; }
+.slot-btn.hot { border-color:var(--amber); color:var(--amber); }
+.slot-btn.hot.active { background:var(--amber); border-color:var(--amber); color:#000; }
+
+/* ── vuelos activos ── */
+.vuelos-titulo { font-size:11px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:8px; font-family:var(--mono); }
+.vuelo-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; min-height:28px; }
+.vuelo-chip { font-size:11px; padding:4px 10px; border-radius:20px; background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.3); color:#93c5fd; font-family:var(--mono); white-space:nowrap; }
+.vuelo-chip.none { color:var(--muted); background:none; border-color:var(--border); }
+
+/* ── paradas ── */
+.paradas-titulo { font-size:11px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px; font-family:var(--mono); }
+.parada-card { background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; transition:border-color 0.2s; }
+.parada-card.alta { border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.05); }
+.parada-card.media { border-color:rgba(245,158,11,0.3); background:rgba(245,158,11,0.04); }
+.parada-rank { font-family:var(--mono); font-size:11px; color:var(--muted); width:16px; flex-shrink:0; }
+.parada-info { flex:1; min-width:0; }
+.parada-nombre { font-size:15px; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.parada-detalle { font-size:11px; color:var(--muted); margin-top:2px; }
+.parada-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+.parada-pct { font-family:var(--mono); font-size:18px; font-weight:500; }
+.pct-alta { color:var(--green); }
+.pct-media { color:var(--amber); }
+.pct-baja { color:var(--muted); }
+.parada-bar { width:60px; height:3px; border-radius:2px; background:var(--bg3); overflow:hidden; }
+.parada-bar-fill { height:100%; border-radius:2px; transition:width 0.4s ease; }
+
+/* ── insight box ── */
+.insight { background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.2); border-radius:12px; padding:12px 14px; margin-bottom:16px; font-size:13px; line-height:1.5; color:#7dd3fc; }
+.insight strong { color:var(--accent2); }
+
+/* ── vuelos list (tab vuelos) ── */
+.vuelo-row { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+.vuelo-row-top { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.vuelo-hora { font-family:var(--mono); font-size:17px; font-weight:500; color:var(--text); min-width:48px; }
+.vuelo-destino { font-size:14px; font-weight:500; color:var(--text); flex:1; }
+.vuelo-aerolinea { font-size:11px; color:var(--muted); }
+.vuelo-row-bot { display:flex; gap:8px; }
+.tag { font-size:11px; padding:3px 8px; border-radius:6px; font-family:var(--mono); }
+.tag-recogida { background:rgba(59,130,246,0.12); color:#93c5fd; border:1px solid rgba(59,130,246,0.2); }
+.tag-parada { background:rgba(16,185,129,0.1); color:#6ee7b7; border:1px solid rgba(16,185,129,0.2); }
+.tag-pais { background:rgba(245,158,11,0.1); color:#fcd34d; border:1px solid rgba(245,158,11,0.2); }
+.vuelo-api-note { font-size:12px; color:var(--muted); text-align:center; margin:16px 0; line-height:1.5; }
+.vuelo-api-note a { color:var(--accent); text-decoration:none; }
+
+/* ── config (tab paradas) ── */
+.config-parada { background:var(--bg2); border:1px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+.config-parada-header { padding:12px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.config-parada-nombre { font-size:14px; font-weight:500; }
+.config-parada-count { font-size:11px; color:var(--muted); font-family:var(--mono); }
+.config-parada-body { padding:0 14px 12px; display:none; }
+.config-parada-body.open { display:block; }
+.hotel-item { display:flex; align-items:center; gap:8px; padding:6px 0; border-top:1px solid var(--border); }
+.hotel-name { flex:1; font-size:13px; color:var(--text); }
+.hotel-pais { font-size:13px; }
+.hotel-pct { font-family:var(--mono); font-size:12px; color:var(--muted); }
+.hotel-del { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:0 4px; }
+.add-hotel-row { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.add-hotel-row input, .add-hotel-row select { background:var(--bg3); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:12px; padding:6px 10px; font-family:var(--font); flex:1; min-width:80px; }
+.add-hotel-row input::placeholder { color:var(--muted); }
+.btn-add { background:var(--accent); border:none; border-radius:8px; color:#fff; font-size:12px; padding:6px 12px; cursor:pointer; font-family:var(--font); white-space:nowrap; }
+
+/* ── spinner ── */
+.spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--border); border-top-color:var(--accent2); border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:6px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── empty state ── */
+.empty { text-align:center; padding:40px 20px; color:var(--muted); font-size:14px; line-height:1.6; }
+
+/* ── toast de alerta ── */
+#toast-container { position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none; width:90%; max-width:400px; }
+.toast { background:#0f1f12; border:1px solid rgba(16,185,129,0.5); border-radius:14px; padding:14px 16px; width:100%; pointer-events:all; animation:toastIn 0.3s ease; box-shadow:0 0 24px rgba(16,185,129,0.2); }
+.toast.urgente { background:#1f0f0f; border-color:rgba(239,68,68,0.5); box-shadow:0 0 24px rgba(239,68,68,0.2); }
+@keyframes toastIn { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+@keyframes toastOut { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-12px)} }
+.toast-top { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.toast-dot { width:8px; height:8px; border-radius:50%; background:var(--green); flex-shrink:0; }
+.toast.urgente .toast-dot { background:var(--red); }
+.toast-titulo { font-size:13px; font-weight:600; color:#6ee7b7; flex:1; }
+.toast.urgente .toast-titulo { color:#fca5a5; }
+.toast-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:18px; line-height:1; padding:0; }
+.toast-body { font-size:13px; color:var(--text); line-height:1.4; }
+.toast-sub { font-size:11px; color:var(--muted); margin-top:4px; font-family:var(--mono); }
+/* ── botón alertas en header ── */
+.alerta-btn { font-size:11px; font-family:var(--mono); padding:5px 10px; border-radius:20px; border:1px solid var(--border); background:var(--bg3); color:var(--muted); cursor:pointer; display:flex; align-items:center; gap:5px; transition:all 0.2s; }
+.alerta-btn.on { border-color:rgba(16,185,129,0.5); color:#6ee7b7; background:rgba(16,185,129,0.08); }
+.alerta-btn .dot { width:6px; height:6px; border-radius:50%; background:var(--muted); }
+.alerta-btn.on .dot { background:var(--green); box-shadow:0 0 6px var(--green); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-top">
+      <span class="logo">TAXI·MAH</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="date-badge" id="fecha-badge"></span>
+        <button class="alerta-btn" id="alerta-btn" onclick="toggleAlertas()"><span class="dot"></span>Alertas</button>
+      </div>
+    </div>
+    <h1>Predictor de<br><span>reservas</span></h1>
+    <p class="subtitle">Ciutadella → Aeropuerto · 45 min</p>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="switchTab('prediccion')">Predicción</button>
+    <button class="nav-btn" onclick="switchTab('vuelos')">Vuelos</button>
+    <button class="nav-btn" onclick="switchTab('paradas')">Mis paradas</button>
+  </nav>
+
+  <!-- TAB: PREDICCIÓN -->
+  <div class="content section active" id="tab-prediccion">
+
+    <div class="now-bar">
+      <div class="now-dot"></div>
+      <div class="now-text">Hora actual</div>
+      <div class="now-time" id="hora-actual">--:--</div>
+    </div>
+
+    <div class="slot-label">Selecciona franja</div>
+    <div class="slot-scroll" id="slot-scroll"></div>
+
+    <div class="vuelos-titulo">Vuelos que generan demanda en esta franja</div>
+    <div class="vuelo-chips" id="vuelo-chips-activos">
+      <span class="vuelo-chip none">Cargando vuelos…</span>
+    </div>
+
+    <div class="insight" id="insight-box">Analizando datos de vuelos…</div>
+
+    <div class="paradas-titulo">Paradas · probabilidad</div>
+    <div id="paradas-list"></div>
+
+  </div>
+
+  <!-- TAB: VUELOS -->
+  <div class="content section" id="tab-vuelos">
+    <div class="slot-label">Salidas de hoy desde Menorca (MAH)</div>
+    <div id="vuelos-list"><div class="empty"><span class="spinner"></span>Cargando vuelos…</div></div>
+    <p class="vuelo-api-note" id="api-note"></p>
+  </div>
+
+  <!-- TAB: PARADAS -->
+  <div class="content section" id="tab-paradas">
+    <div class="slot-label">Paradas y hoteles</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Añade los hoteles de cada parada con el país mayoritario de sus clientes. Esto mejora la precisión de las predicciones.</p>
+    <div id="config-list"></div>
+  </div>
+
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ── datos base ──
+const PARADAS_BASE = [
+  { id:"calen_blanes", nombre:"Calen Blanes" },
+  { id:"perimetral",   nombre:"Perimetral" },
+  { id:"molino",       nombre:"Molino" },
+  { id:"pinos",        nombre:"Pinos" },
+  { id:"sa_caleta",    nombre:"Sa Caleta" },
+  { id:"cala_blanca",  nombre:"Cala Blanca" },
+  { id:"calen_bosch",  nombre:"Calen Bosch" },
+];
+
+
+// ── hoteles precargados con datos verificados ──
+// transfer: 1.0 = autocar incluido (TUI/Jet2) → máx reducción
+//           0.6 = tour operador pero no exclusivo → reducción media
+//           0.0 = independiente / sin transfer → sin reducción
+const HOTELES_PRECARGADOS = {
+  // ── CALEN BLANES / CALEN FORCAT ──────────────────────────────
+  calen_blanes: [
+    // Globales Binimar: Jet2 + TUI + EasyJet, clientela 🇬🇧🇩🇪, transfer autocar incluido
+    { nombre:"Globales Binimar",          pais:"🇬🇧", pct:60, transfer:1.0, estrellas:3 },
+    // Globales Cala'n Blanes: Jet2 + EasyJet, mix 🇬🇧🇩🇪
+    { nombre:"Globales Cala'n Blanes",    pais:"🇬🇧", pct:50, transfer:1.0, estrellas:3 },
+    // Globales Los Delfines: TUI + First Choice + Jet2, clientela 🇬🇧
+    { nombre:"Globales Los Delfines",     pais:"🇬🇧", pct:65, transfer:1.0, estrellas:4 },
+    // Pierre & Vacances: cadena francesa, clientes independientes 🇫🇷, sin transfer incluido
+    { nombre:"Pierre & Vacances",         pais:"🇫🇷", pct:85, transfer:0.0, estrellas:3 },
+    // Roc Cala'n Blanes (Nicolaus Club): Thomas Cook / Condor, clientela 🇩🇪
+    { nombre:"Roc Cala'n Blanes Beach",   pais:"🇩🇪", pct:60, transfer:0.6, estrellas:3 },
+    // Oasis Park (Roc Hotels): tour operadores franceses, clientes independientes 🇫🇷
+    { nombre:"Oasis Park",                pais:"🇫🇷", pct:75, transfer:0.0, estrellas:3 },
+    // Apartamentos Vista Blanes: sin tour op, mix 🇬🇧🇩🇪
+    { nombre:"Aptos. Vista Blanes",       pais:"🇬🇧", pct:45, transfer:0.0, estrellas:2 },
+  ],
+  // ── PERIMETRAL ────────────────────────────────────────────────
+  perimetral: [
+    // Hotel Rural Sant Ignasi: On The Beach + independientes, mix 🇬🇧🇪🇸, sin autocar
+    { nombre:"Hotel Rural Sant Ignasi",   pais:"🇬🇧", pct:50, transfer:0.0, estrellas:4 },
+    // Hotel Alfons: independiente, clientela mayoritariamente 🇪🇸🇩🇪
+    { nombre:"Hotel Alfons",              pais:"🇩🇪", pct:50, transfer:0.0, estrellas:3 },
+    // Morvedra Nou: agroturismo rural, mix europeo independiente 🇩🇪🇫🇷
+    { nombre:"Morvedra Nou Rural Hotel",  pais:"🇩🇪", pct:50, transfer:0.0, estrellas:4 },
+    // Agroturismo Ses Talaies: rural, clientela independiente 🇫🇷🇩🇪
+    { nombre:"Agroturismo Ses Talaies",   pais:"🇫🇷", pct:50, transfer:0.0, estrellas:4 },
+  ],
+  // ── MOLINO ───────────────────────────────────────────────────
+  molino: [
+    // Club Ciudadela Aparthotel: TUI, clientela 🇬🇧, transfer parcial
+    { nombre:"Club Ciudadela Aparthotel", pais:"🇬🇧", pct:55, transfer:0.6, estrellas:3 },
+    // Apartamentos Maribel: sin tour op, mix 🇩🇪🇬🇧
+    { nombre:"Apartamentos Maribel",      pais:"🇩🇪", pct:50, transfer:0.0, estrellas:3 },
+    // Hotel Faustino Gran (Relais & Châteaux): lujo, clientela independiente 🇫🇷🇩🇪, sin autocar
+    { nombre:"Hotel Can Faustino (Relais & Ch.)", pais:"🇫🇷", pct:60, transfer:0.0, estrellas:5 },
+  ],
+  // ── PINOS ────────────────────────────────────────────────────
+  pinos: [
+    // Hotel Menorca Patricia: independiente, clientela 🇪🇸🇫🇷, sin transfer
+    { nombre:"Hotel Menorca Patricia",    pais:"🇪🇸", pct:55, transfer:0.0, estrellas:3 },
+    // Seth Port Ciutadella: Jet2, clientela 🇬🇧🇪🇸, autocar incluido
+    { nombre:"Seth Port Ciutadella",      pais:"🇬🇧", pct:50, transfer:1.0, estrellas:4 },
+    // Hotel Port Ciutadella: TUI, clientela 🇬🇧🇩🇪, autocar incluido
+    { nombre:"Hotel Port Ciutadella",     pais:"🇬🇧", pct:50, transfer:1.0, estrellas:4 },
+    // Apartamentos Talayot: sin tour op, mix 🇬🇧🇩🇪
+    { nombre:"Apartamentos Talayot",      pais:"🇬🇧", pct:45, transfer:0.0, estrellas:3 },
+    // Apartamentos Sol Ponent: sin tour op, 🇩🇪🇬🇧
+    { nombre:"Apartamentos Sol Ponent",   pais:"🇩🇪", pct:55, transfer:0.0, estrellas:2 },
+    // Cales de Ponent: muy valorado, mix 🇪🇸🇩🇪, sin transfer
+    { nombre:"Apartaments Cales de Ponent",pais:"🇩🇪",pct:50, transfer:0.0, estrellas:3 },
+  ],
+  // ── SA CALETA / CALA SANTANDRIA ──────────────────────────────
+  sa_caleta: [
+    // Gran Sagitario: TUI + Jet2, 🇬🇧🇩🇪, transfer autocar
+    { nombre:"Hotel Gran Sagitario",      pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    // Petit Sagitario: Jet2, adults only, 🇬🇧🇫🇷
+    { nombre:"Petit Sagitario",           pais:"🇬🇧", pct:50, transfer:1.0, estrellas:4 },
+    // Prinsotel La Caleta: TUI, 🇩🇪🇬🇧, transfer autocar
+    { nombre:"Prinsotel La Caleta",       pais:"🇩🇪", pct:55, transfer:1.0, estrellas:4 },
+    // Vibra Blanc Palace: mix tour op, 🇩🇪🇬🇧
+    { nombre:"Vibra Blanc Palace",        pais:"🇩🇪", pct:50, transfer:0.6, estrellas:4 },
+    // Hotel Playa Santandria: TUI, adults only, 🇬🇧
+    { nombre:"Hotel Playa Santandria",    pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    // Hotel Bahia: sin tour op, 🇩🇪🇪🇸
+    { nombre:"Hotel Bahia",               pais:"🇩🇪", pct:45, transfer:0.0, estrellas:3 },
+  ],
+  // ── CALA BLANCA ──────────────────────────────────────────────
+  cala_blanca: [
+    // Sagitario Playa: TUI + Jet2, 🇬🇧🇩🇪, transfer autocar
+    { nombre:"Hotel Sagitario Playa",     pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    // Apartamentos Blancala: sin tour op, 🇫🇷🇩🇪
+    { nombre:"Apartamentos Blancala",     pais:"🇫🇷", pct:55, transfer:0.0, estrellas:3 },
+    // Vestige Son Vell (rural, zona Cala Blanca): lujo francés 🇫🇷, sin transfer autocar
+    { nombre:"Vestige Son Vell",          pais:"🇫🇷", pct:75, transfer:0.0, estrellas:5 },
+    // Grupotel Tamariscos: Jet2 + TUI, 🇬🇧🇩🇪
+    { nombre:"Grupotel Tamariscos",       pais:"🇬🇧", pct:50, transfer:1.0, estrellas:3 },
+  ],
+  // ── CALEN BOSCH / SON XORIGUER ───────────────────────────────
+  calen_bosch: [
+    // Grupotel Turquesa Mar (TUI BLUE): TUI EXCLUSIVO, 🇬🇧, transfer 100% autocar
+    { nombre:"Grupotel Club Turquesa Mar",pais:"🇬🇧", pct:90, transfer:1.0, estrellas:4 },
+    // Grupotel Club Menorca: Jet2 + TUI, 🇩🇪🇬🇧
+    { nombre:"Grupotel Club Menorca",     pais:"🇩🇪", pct:65, transfer:1.0, estrellas:3 },
+    // Grupotel Aldea Cala'n Bosch: TUI, 🇩🇪
+    { nombre:"Grupotel Aldea Cala'n Bosch",pais:"🇩🇪",pct:60, transfer:1.0, estrellas:4 },
+    // Grupotel Playa Club: TUI + Jet2, 🇬🇧🇩🇪
+    { nombre:"Grupotel Playa Club",       pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    // MarSenses Paradise Club: Jet2 + TUI, 🇬🇧, último drop-off autocar
+    { nombre:"MarSenses Paradise Club",   pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    // Fergus Style Carema Beach: TUI, 🇬🇧
+    { nombre:"Fergus Style Carema Beach", pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    // Sol Falcó Menorca: Jet2 + TUI, 🇬🇧
+    { nombre:"Sol Falcó Menorca",         pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    // Zafiro Menorca: Jet2, 🇬🇧
+    { nombre:"Zafiro Menorca",            pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    // Valentin Star Menorca: Jet2 + TUI, adults only, 🇬🇧
+    { nombre:"Valentin Star Menorca",     pais:"🇬🇧", pct:60, transfer:1.0, estrellas:4 },
+    // La Quinta Menorca PortBlue: Jet2, 🇬🇧
+    { nombre:"La Quinta Menorca PortBlue",pais:"🇬🇧", pct:50, transfer:1.0, estrellas:5 },
+    // Lago Resort: Jet2, 🇬🇧, transfer autocar confirmado en reseñas
+    { nombre:"Lago Resort Menorca",       pais:"🇬🇧", pct:55, transfer:1.0, estrellas:5 },
+    // Sagitario Princesa Playa: Jet2, 🇬🇧
+    { nombre:"Sagitario Princesa Playa",  pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    // RV Hotels Sea Club: Condor / Eurowings Holidays, 🇩🇪, transfer parcial
+    { nombre:"RV Hotels Sea Club",        pais:"🇩🇪", pct:55, transfer:0.6, estrellas:4 },
+    // Nuramar Aparthotel: sin tour op exclusivo, 🇩🇪🇬🇧
+    { nombre:"Nuramar Aparthotel",        pais:"🇩🇪", pct:50, transfer:0.0, estrellas:3 },
+  ],
+};
+
+// Inicializar hoteles desde datos precargados si localStorage está vacío
+function inicializarHoteles() {
+  const guardados = JSON.parse(localStorage.getItem("taximah_hoteles") || "{}");
+  let hayDatos = PARADAS_BASE.some(p => (guardados[p.id]||[]).length > 0);
+  if (!hayDatos) {
+    // primera vez: cargar datos precargados
+    PARADAS_BASE.forEach(p => {
+      guardados[p.id] = (HOTELES_PRECARGADOS[p.id] || []);
+    });
+    saveHoteles(guardados);
+    return guardados;
+  }
+  return guardados;
+}
+
+// países → destinos frecuentes (IATA) y vuelos típicos
+const PAIS_DESTINOS = {
+  "🇫🇷": ["ORY","CDG","LYS","NCE","MRS","BOD","TLS","NTE"],
+  "🇬🇧": ["LGW","LHR","MAN","BHX","LPL","BRS","EDI","GLA","STN","EMA"],
+  "🇩🇪": ["FRA","MUC","DUS","HAM","BER","STR","CGN","HAJ"],
+  "🇪🇸": ["MAD","BCN","PMI","VLC","SVQ","AGP","BIO","ZAZ"],
+  "🇮🇹": ["FCO","MXP","BGY","VCE","NAP","BLQ"],
+  "🇳🇱": ["AMS","EIN","RTM"],
+  "🇧🇪": ["BRU","CRL","LGG"],
+  "🇨🇭": ["ZRH","GVA","BSL"],
+  "🇦🇹": ["VIE"],
+  "🇸🇪": ["ARN","GOT"],
+  "🇩🇰": ["CPH"],
+  "🇵🇱": ["WAW","KRK"],
+};
+
+const FLAG_NOMBRES = {
+  "🇫🇷":"Franceses","🇬🇧":"Británicos","🇩🇪":"Alemanes","🇪🇸":"Españoles",
+  "🇮🇹":"Italianos","🇳🇱":"Holandeses","🇧🇪":"Belgas","🇨🇭":"Suizos",
+  "🇦🇹":"Austríacos","🇸🇪":"Suecos","🇩🇰":"Daneses","🇵🇱":"Polacos",
+};
+
+// ── estado local (localStorage) ──
+function loadHoteles() {
+  try { return JSON.parse(localStorage.getItem("taximah_hoteles") || "{}"); } catch { return {}; }
+}
+function saveHoteles(h) { localStorage.setItem("taximah_hoteles", JSON.stringify(h)); }
+
+let hoteles = inicializarHoteles(); // { parada_id: [{nombre, pais, pct, transfer}] }
+let vuelos = []; // salidas de hoy
+let activeSlot = null;
+
+// ── utilidades ──
+function horaAMin(h) { const [hh,mm] = h.split(":").map(Number); return hh*60+mm; }
+function minAHora(m) { return `${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`; }
+function redondear15(m) { return Math.round(m/15)*15; }
+function ahora() { const d=new Date(); return d.getHours()*60+d.getMinutes(); }
+
+function slotRecogida(horaVuelo) {
+  // vuelo - 60min check-in - 45min trayecto = recogida
+  const min = horaAMin(horaVuelo) - 60 - 45;
+  return redondear15(min);
+}
+
+// ── fecha ──
+(function() {
+  const d = new Date();
+  const dias = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+  const meses = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  document.getElementById("fecha-badge").textContent =
+    `${dias[d.getDay()]} ${d.getDate()} ${meses[d.getMonth()]}`;
+})();
+
+function tickHora() {
+  const d = new Date();
+  document.getElementById("hora-actual").textContent =
+    `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+tickHora(); setInterval(tickHora, 10000);
+
+// ── slots ──
+function generarSlots() {
+  const slots = [];
+  for (let h=6; h<=21; h++) for (let m=0; m<60; m+=15) slots.push(h*60+m);
+  return slots;
+}
+
+function renderSlots() {
+  const container = document.getElementById("slot-scroll");
+  const slots = generarSlots();
+  const now = ahora();
+  // calcular actividad por slot
+  const actividadSlot = {};
+  slots.forEach(s => { actividadSlot[s] = calcularActividad(s); });
+  const maxAct = Math.max(...Object.values(actividadSlot), 0.01);
+
+  container.innerHTML = slots.map(s => {
+    const act = actividadSlot[s];
+    const isActive = s === activeSlot;
+    const isHot = act / maxAct > 0.6;
+    const isPast = s < now - 30;
+    let cls = "slot-btn";
+    if (isActive) cls += " active";
+    else if (isHot && !isPast) cls += " hot";
+    return `<button class="${cls}" onclick="selectSlot(${s})" style="${isPast?'opacity:0.4':''}">${minAHora(s)}</button>`;
+  }).join("");
+
+  // scroll al slot activo
+  setTimeout(() => {
+    const btn = container.querySelector(".active");
+    if (btn) btn.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
+  }, 100);
+}
+
+function calcularActividad(slotMin) {
+  if (!vuelos.length) return 0;
+  let total = 0;
+  vuelos.forEach(v => {
+    const rec = slotRecogida(v.hora);
+    const delta = Math.abs(slotMin - rec);
+    if (delta <= 15) {
+      const peso = 1 - delta/30;
+      const paradas = paradasAfectadas(v);
+      total += peso * paradas.length * 0.3;
+    }
+  });
+  return Math.min(1, total);
+}
+
+function paradasAfectadas(vuelo) {
+  const destIATA = vuelo.destino_iata || "";
+  const afectadas = [];
+  PARADAS_BASE.forEach(p => {
+    const hs = hoteles[p.id] || [];
+    if (!hs.length) return;
+    // hay hotel cuyo país va a ese destino
+    const match = hs.some(h => {
+      const dests = PAIS_DESTINOS[h.pais] || [];
+      return dests.includes(destIATA) || dests.some(d => vuelo.aerolinea_lower?.includes("vueling") && ["MAD","BCN"].includes(d));
+    });
+    if (match) afectadas.push(p.id);
+  });
+  // si no hay hoteles configurados, afecta todas
+  if (!afectadas.length && hs_vacío()) return PARADAS_BASE.map(p=>p.id);
+  return afectadas;
+}
+
+function hs_vacío() {
+  return PARADAS_BASE.every(p => !(hoteles[p.id]||[]).length);
+}
+
+// ── probabilidad por parada ──
+function probParada(paradaId, slotMin) {
+  const hs = hoteles[paradaId] || [];
+  let base = hs_vacío() ? 0.25 : (hs.length > 0 ? 0.2 : 0.05);
+
+  // ── factor de calidad (estrellas) ──────────────────────────
+  // A más estrellas, más probable que el cliente use taxi en vez de transporte compartido.
+  // 5★ → x1.45  |  4★ → x1.20  |  3★ → x1.00  |  2★ → x0.80  |  sin dato → x1.00
+  let factorCalidad = 1.0;
+  if (hs.length > 0) {
+    const pesoTotal = hs.reduce((s, h) => s + (h.pct||50), 0);
+    const calidad = hs.reduce((s, h) => {
+      const stars = h.estrellas || 3;
+      const mult = stars === 5 ? 1.45 : stars === 4 ? 1.20 : stars === 3 ? 1.00 : 0.80;
+      return s + mult * (h.pct||50);
+    }, 0);
+    factorCalidad = pesoTotal > 0 ? calidad / pesoTotal : 1.0;
+  }
+
+  // ── factor de transfer (autocar incluido) ──────────────────
+  // transfer 1.0 = autocar TUI/Jet2 → reduce mucho
+  // transfer 0.6 = tour op parcial  → reduce moderado
+  // transfer 0.0 = independiente    → sin reducción
+  let factorTransfer = 1.0;
+  if (hs.length > 0) {
+    const pesoTotal = hs.reduce((s, h) => s + (h.pct||50), 0);
+    const reduccion = hs.reduce((s, h) => {
+      const tf = h.transfer !== undefined ? h.transfer : 0.0;
+      const reduccionHotel = tf === 1.0 ? 0.65 : tf === 0.6 ? 0.30 : 0.0;
+      return s + reduccionHotel * (h.pct||50);
+    }, 0);
+    const reduccionMedia = pesoTotal > 0 ? reduccion / pesoTotal : 0;
+    factorTransfer = 1.0 - reduccionMedia;
+  }
+
+  // ── contribución de vuelos ─────────────────────────────────
+  vuelos.forEach(v => {
+    const rec = slotRecogida(v.hora);
+    const delta = Math.abs(slotMin - rec);
+    if (delta > 30) return;
+    const peso = 1 - delta/30;
+    const destIATA = v.destino_iata || "";
+    let matchScore = 0;
+
+    if (hs.length === 0 && hs_vacío()) {
+      matchScore = 0.4;
+    } else {
+      hs.forEach(h => {
+        const dests = PAIS_DESTINOS[h.pais] || [];
+        if (dests.includes(destIATA)) {
+          const pctH = (h.pct || 50) / 100;
+          matchScore += pctH * 0.7;
+        }
+      });
+    }
+    base += peso * matchScore;
+  });
+
+  return Math.min(0.97, base * factorCalidad * factorTransfer);
+}
+
+function renderParadas() {
+  if (activeSlot === null) return;
+  const list = document.getElementById("paradas-list");
+  const paradas = PARADAS_BASE.map(p => ({
+    ...p,
+    prob: probParada(p.id, activeSlot),
+    hotCount: (hoteles[p.id]||[]).length,
+  })).sort((a,b) => b.prob-a.prob);
+
+  list.innerHTML = paradas.map((p, i) => {
+    const pct = Math.round(p.prob*100);
+    const nivel = pct>55?"alta": pct>30?"media":"baja";
+    const color = nivel==="alta"?"#10b981": nivel==="media"?"#f59e0b":"#6b7a99";
+    const hs = hoteles[p.id]||[];
+    const detalle = hs.length ? hs.map(h=>h.nombre).join(", ") : "Sin hoteles configurados";
+    return `<div class="parada-card ${nivel}">
+      <div class="parada-rank">${i+1}</div>
+      <div class="parada-info">
+        <div class="parada-nombre">${p.nombre}</div>
+        <div class="parada-detalle">${detalle}</div>
+      </div>
+      <div class="parada-right">
+        <div class="parada-pct pct-${nivel}">${pct}%</div>
+        <div class="parada-bar"><div class="parada-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      </div>
+    </div>`;
+  }).join("");
+
+  // insight
+  const top = paradas[0];
+  const topPct = Math.round(top.prob*100);
+  const vuelosActivos = getVuelosActivos(activeSlot);
+  const insight = document.getElementById("insight-box");
+  if (vuelosActivos.length) {
+    const vStr = vuelosActivos.map(v=>`${v.hora} → ${v.destino}`).join(", ");
+    insight.innerHTML = `<strong>Franja ${minAHora(activeSlot)}</strong> — Vuelos que generan demanda: ${vStr}.<br>Posiciónate en <strong>${top.nombre}</strong> (${topPct}% prob.).`;
+  } else {
+    insight.innerHTML = `<strong>Sin vuelos</strong> con salida cercana a las ${minAHora(activeSlot)}. Probabilidad basada en histórico de paradas.`;
+  }
+}
+
+function getVuelosActivos(slotMin) {
+  return vuelos.filter(v => {
+    const rec = slotRecogida(v.hora);
+    return Math.abs(slotMin - rec) <= 15;
+  });
+}
+
+function renderVueloChips(slotMin) {
+  const activos = getVuelosActivos(slotMin);
+  const cont = document.getElementById("vuelo-chips-activos");
+  if (!activos.length) {
+    cont.innerHTML = `<span class="vuelo-chip none">Ningún vuelo en esta franja</span>`;
+    return;
+  }
+  cont.innerHTML = activos.map(v =>
+    `<span class="vuelo-chip">${v.hora} ${v.destino} ${v.pais_flag||""}</span>`
+  ).join("");
+}
+
+function selectSlot(s) {
+  activeSlot = s;
+  renderSlots();
+  renderParadas();
+  renderVueloChips(s);
+}
+
+// ── configuración API ──
+const RAPIDAPI_KEY = "672ef22455mshd15f310e6322e8cp1bd8e2jsnbf4d4050c3b2";
+const AIRPORT_ICAO = "LEMH"; // Menorca
+
+// mapa IATA país de destino → bandera
+const IATA_PAIS = {
+  ORY:"🇫🇷",CDG:"🇫🇷",LYS:"🇫🇷",NCE:"🇫🇷",MRS:"🇫🇷",BOD:"🇫🇷",TLS:"🇫🇷",NTE:"🇫🇷",MPL:"🇫🇷",BIQ:"🇫🇷",
+  LGW:"🇬🇧",LHR:"🇬🇧",MAN:"🇬🇧",BHX:"🇬🇧",LPL:"🇬🇧",BRS:"🇬🇧",EDI:"🇬🇧",GLA:"🇬🇧",STN:"🇬🇧",EMA:"🇬🇧",NCL:"🇬🇧",LBA:"🇬🇧",EXT:"🇬🇧",
+  FRA:"🇩🇪",MUC:"🇩🇪",DUS:"🇩🇪",HAM:"🇩🇪",BER:"🇩🇪",STR:"🇩🇪",CGN:"🇩🇪",HAJ:"🇩🇪",NUE:"🇩🇪",
+  MAD:"🇪🇸",BCN:"🇪🇸",PMI:"🇪🇸",VLC:"🇪🇸",SVQ:"🇪🇸",AGP:"🇪🇸",BIO:"🇪🇸",ZAZ:"🇪🇸",
+  AMS:"🇳🇱",EIN:"🇳🇱",RTM:"🇳🇱",
+  BRU:"🇧🇪",CRL:"🇧🇪",
+  ZRH:"🇨🇭",GVA:"🇨🇭",
+  VIE:"🇦🇹",
+  ARN:"🇸🇪",GOT:"🇸🇪",
+  CPH:"🇩🇰",
+  WAW:"🇵🇱",KRK:"🇵🇱",
+  FCO:"🇮🇹",MXP:"🇮🇹",BGY:"🇮🇹",VCE:"🇮🇹",
+};
+
+function parsearVuelosAPI(data) {
+  if (!data || !data.departures) return [];
+  return data.departures
+    .filter(f => f.departure?.scheduledTimeLocal && f.arrival?.airport?.iata)
+    .map(f => {
+      const horaRaw = f.departure.scheduledTimeLocal; // "2025-05-21 08:30+02:00"
+      const hora = horaRaw.substring(11,16); // "08:30"
+      const iata = f.arrival.airport.iata;
+      const nombre = f.arrival.airport.name || iata;
+      const aerolinea = f.airline?.name || f.number || "";
+      const flag = IATA_PAIS[iata] || "🌍";
+      return {
+        hora,
+        destino: `${nombre} (${iata})`,
+        destino_iata: iata,
+        aerolinea,
+        pais_flag: flag,
+      };
+    })
+    .sort((a,b) => a.hora.localeCompare(b.hora));
+}
+
+async function cargarVuelos() {
+  // mostrar estado de carga
+  document.getElementById("vuelos-list").innerHTML =
+    `<div class="empty"><span class="spinner"></span>Cargando vuelos reales de MAH…</div>`;
+  document.getElementById("vuelo-chips-activos").innerHTML =
+    `<span class="vuelo-chip none"><span class="spinner"></span>Cargando…</span>`;
+
+  try {
+    // construir rango horario: hoy 00:00 → mañana 00:00 (local Menorca, UTC+2 en verano)
+    const hoy = new Date();
+    const pad = n => String(n).padStart(2,"0");
+    const fechaISO = `${hoy.getFullYear()}-${pad(hoy.getMonth()+1)}-${pad(hoy.getDate())}`;
+    const fromLocal = `${fechaISO}T00:00`;
+    const toLocal   = `${fechaISO}T23:59`;
+
+    const apiUrl = `https://aerodatabox.p.rapidapi.com/flights/airports/icao/${AIRPORT_ICAO}/${fromLocal}/${toLocal}?withLeg=true&direction=Departure&withCancelled=false&withCodeshared=false&withCargo=false&withPrivate=false`;
+
+    // intento directo (funciona desde Netlify/servidor)
+    let data;
+    try {
+      const res = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          "x-rapidapi-host": "aerodatabox.p.rapidapi.com",
+          "x-rapidapi-key": RAPIDAPI_KEY,
+        }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      data = await res.json();
+    } catch (corsErr) {
+      // fallback: proxy CORS para archivo local o entornos restrictivos
+      const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl + "&headers=" + encodeURIComponent(JSON.stringify({"x-rapidapi-host":"aerodatabox.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY})))}`;
+      const res2 = await fetch(proxy);
+      if (!res2.ok) throw new Error(`Proxy HTTP ${res2.status}`);
+      const wrapper = await res2.json();
+      data = JSON.parse(wrapper.contents);
+    }
+    vuelos = parsearVuelosAPI(data);
+
+    if (!vuelos.length) throw new Error("Sin vuelos en la respuesta");
+
+    document.getElementById("api-note").innerHTML =
+      `✓ Datos reales · AeroDataBox · ${vuelos.length} vuelos hoy · <span style="color:var(--muted)">${fechaISO}</span>`;
+
+  } catch (err) {
+    console.warn("AeroDataBox error:", err.message);
+    // fallback a datos de ejemplo si la API falla
+    vuelos = VUELOS_FALLBACK;
+    document.getElementById("api-note").innerHTML =
+      `⚠ Sin conexión a API · Mostrando datos de ejemplo · <span style="color:var(--muted)">${err.message}</span>`;
+  }
+
+  renderTabVuelos();
+
+  // auto-seleccionar el slot con más actividad desde ahora
+  const now = ahora();
+  const slots = generarSlots();
+  const futuros = slots.filter(s => s >= now - 15);
+  const actividadMax = futuros.reduce((best, s) => {
+    const a = calcularActividad(s);
+    return a > best.a ? {s, a} : best;
+  }, {s: futuros[0] || slots[0], a: 0});
+  activeSlot = actividadMax.s;
+  renderSlots();
+  renderParadas();
+  renderVueloChips(activeSlot);
+}
+
+// datos de respaldo si la API no responde
+const VUELOS_FALLBACK = [
+  { hora:"07:05", destino:"Barcelona (BCN)", destino_iata:"BCN", aerolinea:"Vueling", pais_flag:"🇪🇸" },
+  { hora:"08:20", destino:"Paris Orly (ORY)", destino_iata:"ORY", aerolinea:"Transavia", pais_flag:"🇫🇷" },
+  { hora:"09:10", destino:"Manchester (MAN)", destino_iata:"MAN", aerolinea:"Ryanair", pais_flag:"🇬🇧" },
+  { hora:"10:00", destino:"Frankfurt (FRA)", destino_iata:"FRA", aerolinea:"Condor", pais_flag:"🇩🇪" },
+  { hora:"10:45", destino:"Londres Gatwick (LGW)", destino_iata:"LGW", aerolinea:"EasyJet", pais_flag:"🇬🇧" },
+  { hora:"12:15", destino:"París CDG (CDG)", destino_iata:"CDG", aerolinea:"Air France", pais_flag:"🇫🇷" },
+  { hora:"13:40", destino:"Berlín (BER)", destino_iata:"BER", aerolinea:"Eurowings", pais_flag:"🇩🇪" },
+  { hora:"14:25", destino:"Birmingham (BHX)", destino_iata:"BHX", aerolinea:"Jet2", pais_flag:"🇬🇧" },
+  { hora:"17:20", destino:"Londres Stansted (STN)", destino_iata:"STN", aerolinea:"Ryanair", pais_flag:"🇬🇧" },
+  { hora:"18:05", destino:"Lyon (LYS)", destino_iata:"LYS", aerolinea:"Transavia", pais_flag:"🇫🇷" },
+  { hora:"19:00", destino:"Barcelona (BCN)", destino_iata:"BCN", aerolinea:"Vueling", pais_flag:"🇪🇸" },
+  { hora:"20:30", destino:"Manchester (MAN)", destino_iata:"MAN", aerolinea:"EasyJet", pais_flag:"🇬🇧" },
+];
+
+function renderTabVuelos() {
+  const now = ahora();
+  const list = document.getElementById("vuelos-list");
+  list.innerHTML = vuelos.map(v => {
+    const rec = slotRecogida(v.hora);
+    const isPast = horaAMin(v.hora) < now;
+    return `<div class="vuelo-row" style="${isPast?'opacity:0.45':''}">
+      <div class="vuelo-row-top">
+        <div class="vuelo-hora">${v.hora}</div>
+        <div>
+          <div class="vuelo-destino">${v.destino} ${v.pais_flag||""}</div>
+          <div class="vuelo-aerolinea">${v.aerolinea}</div>
+        </div>
+      </div>
+      <div class="vuelo-row-bot">
+        <span class="tag tag-recogida">Recogida ~${minAHora(rec)}</span>
+        <span class="tag tag-pais">${v.pais_flag||""} ${FLAG_NOMBRES[v.pais_flag]||""}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+}
+
+// ── config paradas ──
+function renderConfig() {
+  const cont = document.getElementById("config-list");
+  cont.innerHTML = PARADAS_BASE.map(p => {
+    const hs = hoteles[p.id] || [];
+    const hotelItems = hs.map((h, i) => {
+      const tf = h.transfer !== undefined ? h.transfer : 0.0;
+      const tf = h.transfer !== undefined ? h.transfer : 0.0;
+      const tfIcon = tf === 1.0 ? '🚌' : tf === 0.6 ? '🚌~' : '';
+      const stars = h.estrellas || 3;
+      const starsStr = '★'.repeat(stars);
+      return `<div class="hotel-item">
+        <span class="hotel-pais">${h.pais}</span>
+        <span class="hotel-name">${h.nombre}</span>
+        <span class="hotel-pct" style="font-size:11px;color:var(--amber)">${starsStr}</span>
+        <span class="hotel-pct">${tfIcon} ${h.pct||50}%</span>
+        <button class="hotel-del" onclick="delHotel('${p.id}',${i})">×</button>
+      </div>`;
+    }).join("");
+
+    const flagOptions = Object.keys(PAIS_DESTINOS).map(f =>
+      `<option value="${f}">${f} ${FLAG_NOMBRES[f]||""}</option>`
+    ).join("");
+
+    return `<div class="config-parada">
+      <div class="config-parada-header" onclick="toggleConfig('${p.id}')">
+        <span class="config-parada-nombre">${p.nombre}</span>
+        <span class="config-parada-count">${hs.length} hotel${hs.length!==1?"es":""}</span>
+      </div>
+      <div class="config-parada-body" id="cfg-${p.id}">
+        ${hotelItems || '<p style="font-size:12px;color:var(--muted);padding:6px 0">Sin hoteles. Añade uno:</p>'}
+        <div class="add-hotel-row">
+          <input type="text" id="hn-${p.id}" placeholder="Nombre hotel">
+          <select id="hp-${p.id}">${flagOptions}</select>
+          <input type="number" id="hpct-${p.id}" placeholder="%" min="1" max="100" style="max-width:56px">
+          <select id="htf-${p.id}" style="max-width:90px;font-size:11px">
+            <option value="0">Sin transfer</option>
+            <option value="0.6">Transfer parcial</option>
+            <option value="1">Autocar TUI/Jet2</option>
+          </select>
+          <select id="hst-${p.id}" style="max-width:60px;font-size:11px" title="Categoría hotel">
+            <option value="2">2★</option>
+            <option value="3" selected>3★</option>
+            <option value="4">4★</option>
+            <option value="5">5★</option>
+          </select>
+          <button class="btn-add" onclick="addHotel('${p.id}')">+ Añadir</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function toggleConfig(id) {
+  const body = document.getElementById("cfg-"+id);
+  body.classList.toggle("open");
+}
+
+function addHotel(paradaId) {
+  const nombre = document.getElementById("hn-"+paradaId).value.trim();
+  const pais = document.getElementById("hp-"+paradaId).value;
+  const pct = parseInt(document.getElementById("hpct-"+paradaId).value) || 50;
+  const transfer = parseFloat(document.getElementById("htf-"+paradaId).value) || 0.0;
+  if (!nombre) return;
+  if (!hoteles[paradaId]) hoteles[paradaId] = [];
+  hoteles[paradaId].push({ nombre, pais, pct, transfer, estrellas: parseInt(document.getElementById('hst-'+paradaId).value)||3 });
+  saveHoteles(hoteles);
+  renderConfig();
+  document.getElementById("cfg-"+paradaId).classList.add("open");
+  // actualizar predicción
+  renderParadas();
+}
+
+function delHotel(paradaId, idx) {
+  hoteles[paradaId].splice(idx, 1);
+  saveHoteles(hoteles);
+  renderConfig();
+  renderParadas();
+}
+
+// ── tabs ──
+function switchTab(tab) {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-"+tab).classList.add("active");
+  event.target.classList.add("active");
+}
+
+
+// ── sistema de notificaciones ──
+const UMBRAL_ALTO = 0.70;   // 70% → alerta normal
+const UMBRAL_CRITICO = 0.88; // 88% → alerta urgente
+let alertasActivas = JSON.parse(localStorage.getItem("taximah_alertas") || "true");
+let notificadosHoy = new Set(); // evita repetir la misma alerta
+
+function toggleAlertas() {
+  alertasActivas = !alertasActivas;
+  localStorage.setItem("taximah_alertas", JSON.stringify(alertasActivas));
+  actualizarBtnAlertas();
+  if (alertasActivas) {
+    mostrarToast("Alertas activadas", "Te avisaré cuando haya alta probabilidad de reserva.", false, 3000);
+    pedirPermisoNotificacion();
+  }
+}
+
+function actualizarBtnAlertas() {
+  const btn = document.getElementById("alerta-btn");
+  if (!btn) return;
+  btn.className = "alerta-btn" + (alertasActivas ? " on" : "");
+  btn.innerHTML = `<span class="dot"></span>${alertasActivas ? "Alertas ON" : "Alertas"}`;
+}
+
+function pedirPermisoNotificacion() {
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+}
+
+function mostrarToast(titulo, cuerpo, urgente = false, duracion = 6000) {
+  const container = document.getElementById("toast-container");
+  const id = "toast-" + Date.now();
+  const div = document.createElement("div");
+  div.className = "toast" + (urgente ? " urgente" : "");
+  div.id = id;
+  div.innerHTML = `
+    <div class="toast-top">
+      <div class="toast-dot"></div>
+      <div class="toast-titulo">${urgente ? "🚨 Alta demanda" : "📍 Demanda elevada"}</div>
+      <button class="toast-close" onclick="cerrarToast('${id}')">×</button>
+    </div>
+    <div class="toast-body">${cuerpo}</div>
+    <div class="toast-sub">${titulo}</div>`;
+  container.appendChild(div);
+  setTimeout(() => cerrarToast(id), duracion);
+}
+
+function cerrarToast(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.animation = "toastOut 0.3s ease forwards";
+  setTimeout(() => el.remove(), 300);
+}
+
+function enviarNotificacionNativa(titulo, cuerpo) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification(titulo, { body: cuerpo, icon: "" });
+  }
+}
+
+function vigilarProximasFranjas() {
+  if (!alertasActivas || !vuelos.length) return;
+  const now = ahora();
+  const slots = generarSlots();
+  // revisar los próximos 90 minutos
+  const proximos = slots.filter(s => s >= now && s <= now + 90);
+
+  proximos.forEach(s => {
+    const key = minAHora(s);
+    if (notificadosHoy.has(key)) return;
+
+    const paradas = PARADAS_BASE.map(p => ({
+      nombre: p.nombre,
+      prob: probParada(p.id, s)
+    })).sort((a,b) => b.prob - a.prob);
+
+    const top = paradas[0];
+    const minRestantes = s - now;
+
+    if (top.prob >= UMBRAL_CRITICO) {
+      notificadosHoy.add(key);
+      const msg = `Posiciónate en <strong>${top.nombre}</strong> — ${Math.round(top.prob*100)}% de probabilidad en ${minRestantes} min.`;
+      mostrarToast(`Franja ${key}`, msg, true, 10000);
+      enviarNotificacionNativa("🚨 TaxiMAH · Alta demanda", `${key} · ${top.nombre} · ${Math.round(top.prob*100)}%`);
+    } else if (top.prob >= UMBRAL_ALTO && minRestantes <= 45) {
+      notificadosHoy.add(key);
+      const msg = `Franja <strong>${key}</strong> — ${top.nombre} con ${Math.round(top.prob*100)}% de prob. en ${minRestantes} min.`;
+      mostrarToast(`Próxima oportunidad`, msg, false, 7000);
+      enviarNotificacionNativa("📍 TaxiMAH · Demanda elevada", `${key} · ${top.nombre} · ${Math.round(top.prob*100)}%`);
+    }
+  });
+}
+
+// vigilar cada 60 segundos
+setInterval(vigilarProximasFranjas, 60000);
+
+// ── init ──
+actualizarBtnAlertas();
+cargarVuelos();
+renderConfig();
+// vigilar al arrancar tras cargar vuelos (con delay)
+setTimeout(vigilarProximasFranjas, 3000);
+</script>
+</body>
+</html>
