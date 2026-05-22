@@ -670,7 +670,6 @@ const IATA_PAIS = {
 };
 
 function parsearVuelosAPI(data) {
-  console.log("[TaxiCiuta] Respuesta API:", JSON.stringify(data).substring(0, 200));
   if (!data || !data.departures) {
     console.warn("[TaxiCiuta] Sin campo 'departures' en respuesta");
     return [];
@@ -696,61 +695,69 @@ function parsearVuelosAPI(data) {
 }
 
 async function cargarVuelos() {
-  // mostrar estado de carga
-  document.getElementById("vuelos-list").innerHTML =
-    `<div class="empty"><span class="spinner"></span>Cargando vuelos reales de MAH…</div>`;
-  document.getElementById("vuelo-chips-activos").innerHTML =
-    `<span class="vuelo-chip none"><span class="spinner"></span>Cargando…</span>`;
+  const hoy = new Date();
+  const pad = n => String(n).padStart(2,"0");
+  const fechaISO = `${hoy.getFullYear()}-${pad(hoy.getMonth()+1)}-${pad(hoy.getDate())}`;
 
+  // ── 1. Cargar caché instantáneamente si es del mismo día ──────
   try {
-    // construir rango horario: hoy 00:00 → mañana 00:00 (local Menorca, UTC+2 en verano)
-    const hoy = new Date();
-    const pad = n => String(n).padStart(2,"0");
-    // Usar hora local del dispositivo (Menorca = Europe/Madrid)
-    const fechaISO = `${hoy.getFullYear()}-${pad(hoy.getMonth()+1)}-${pad(hoy.getDate())}`;
+    const cache = JSON.parse(localStorage.getItem("taximah_vuelos") || "{}");
+    if (cache.fecha === fechaISO && cache.vuelos?.length) {
+      vuelos = cache.vuelos;
+      document.getElementById("api-note").innerHTML =
+        `✓ Caché · ${vuelos.length} vuelos · <span style="color:var(--muted)">${fechaISO}</span>`;
+      _renderTodo();
+      // refrescar en background silenciosamente si han pasado >2h
+      const edad = Date.now() - (cache.ts || 0);
+      if (edad > 2 * 60 * 60 * 1000) _fetchAPI(fechaISO);
+      return;
+    }
+  } catch(e) {}
+
+  // ── 2. Sin caché: mostrar fallback inmediatamente y cargar API en paralelo ──
+  vuelos = VUELOS_FALLBACK;
+  document.getElementById("api-note").innerHTML =
+    `<span class="spinner"></span> Cargando vuelos…`;
+  _renderTodo();
+
+  _fetchAPI(fechaISO);
+}
+
+async function _fetchAPI(fechaISO) {
+  try {
     const fromLocal = `${fechaISO}T00:00`;
     const toLocal   = `${fechaISO}T23:59`;
-    console.log("[TaxiCiuta] Consultando vuelos:", fromLocal, "→", toLocal);
-
-    const apiUrl = `https://aerodatabox.p.rapidapi.com/flights/airports/icao/${AIRPORT_ICAO}/${fromLocal}/${toLocal}?withLeg=true&direction=Departure&withCancelled=false&withCodeshared=false&withCargo=false&withPrivate=false`;
-
-    // intento directo (funciona desde Netlify/servidor)
-    let data;
-    try {
-      const res = await fetch(apiUrl, {
-        method: "GET",
-        headers: {
-          "x-rapidapi-host": "aerodatabox.p.rapidapi.com",
-          "x-rapidapi-key": RAPIDAPI_KEY,
-        }
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      data = await res.json();
-    } catch (corsErr) {
-      // fallback: proxy CORS para archivo local o entornos restrictivos
-      const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl + "&headers=" + encodeURIComponent(JSON.stringify({"x-rapidapi-host":"aerodatabox.p.rapidapi.com","x-rapidapi-key":RAPIDAPI_KEY})))}`;
-      const res2 = await fetch(proxy);
-      if (!res2.ok) throw new Error(`Proxy HTTP ${res2.status}`);
-      const wrapper = await res2.json();
-      data = JSON.parse(wrapper.contents);
-    }
-    vuelos = parsearVuelosAPI(data);
-
-    if (!vuelos.length) throw new Error("Sin vuelos en la respuesta");
-
+    // Parámetros mínimos necesarios para reducir tamaño de respuesta
+    const apiUrl = `https://aerodatabox.p.rapidapi.com/flights/airports/icao/${AIRPORT_ICAO}/${fromLocal}/${toLocal}?withLeg=false&direction=Departure&withCancelled=false&withCodeshared=true&withCargo=false&withPrivate=false`;
+    const res = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        "x-rapidapi-host": "aerodatabox.p.rapidapi.com",
+        "x-rapidapi-key": RAPIDAPI_KEY,
+      }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const parsed = parsearVuelosAPI(data);
+    if (!parsed.length) throw new Error("Sin vuelos");
+    vuelos = parsed;
+    // guardar en caché con timestamp
+    localStorage.setItem("taximah_vuelos", JSON.stringify({
+      fecha: fechaISO, vuelos, ts: Date.now()
+    }));
     document.getElementById("api-note").innerHTML =
-      `✓ Datos reales · AeroDataBox · ${vuelos.length} vuelos hoy · <span style="color:var(--muted)">${fechaISO}</span>`;
-
+      `✓ Datos reales · ${vuelos.length} vuelos · <span style="color:var(--muted)">${fechaISO}</span>`;
+    _renderTodo();
   } catch (err) {
-    console.error("[TaxiCiuta] Error API:", err.message);
     vuelos = VUELOS_FALLBACK;
     document.getElementById("api-note").innerHTML =
       `⚠ Error API · Datos de ejemplo · <span style="color:var(--muted);font-size:11px">${err.message}</span>`;
+    _renderTodo();
   }
+}
 
+function _renderTodo() {
   renderTabVuelos();
-
-  // auto-seleccionar el slot con más actividad desde ahora
   const now = ahora();
   const slots = generarSlots();
   const futuros = slots.filter(s => s >= now - 15);
@@ -758,7 +765,7 @@ async function cargarVuelos() {
     const a = calcularActividad(s);
     return a > best.a ? {s, a} : best;
   }, {s: futuros[0] || slots[0], a: 0});
-  activeSlot = actividadMax.s;
+  if (!activeSlot) activeSlot = actividadMax.s;
   renderSlots();
   renderParadas();
   renderVueloChips(activeSlot);
