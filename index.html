@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0f1e">
-<title>TaxiMAH · Ciutadella</title>
+<title>TaxiCiuta · Ciutadella</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -161,7 +161,7 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:v
 
   <div class="header">
     <div class="header-top">
-      <span class="logo">TAXI·MAH</span>
+      <span class="logo">TAXI·CIUTA</span>
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="date-badge" id="fecha-badge"></span>
         <button class="alerta-btn" id="alerta-btn" onclick="toggleAlertas()"><span class="dot"></span>Alertas</button>
@@ -240,111 +240,111 @@ const HOTELES_PRECARGADOS = {
   // ── CALEN BLANES / CALEN FORCAT ──────────────────────────────
   calen_blanes: [
     // Globales Binimar: Jet2 + TUI + EasyJet, clientela 🇬🇧🇩🇪, transfer autocar incluido
-    { nombre:"Globales Binimar",          pais:"🇬🇧", pct:60, transfer:1.0, estrellas:3 },
+    { nombre:"Globales Binimar",          nacs:[{nacs:[{pais:"🇬🇧",pct:60}]},{nacs:[{pais:"🇩🇪",pct:40}]}], transfer:1.0, estrellas:3 },
     // Globales Cala'n Blanes: Jet2 + EasyJet, mix 🇬🇧🇩🇪
-    { nombre:"Globales Cala'n Blanes",    pais:"🇬🇧", pct:50, transfer:1.0, estrellas:3 },
+    { nombre:"Globales Cala'n Blanes",    nacs:[{nacs:[{pais:"🇬🇧",pct:55}]},{nacs:[{pais:"🇩🇪",pct:45}]}], transfer:1.0, estrellas:3 },
     // Globales Los Delfines: TUI + First Choice + Jet2, clientela 🇬🇧
-    { nombre:"Globales Los Delfines",     pais:"🇬🇧", pct:65, transfer:1.0, estrellas:4 },
+    { nombre:"Globales Los Delfines",     nacs:[{nacs:[{pais:"🇬🇧",pct:65}]},{nacs:[{pais:"🇩🇪",pct:35}]}], transfer:1.0, estrellas:4 },
     // Pierre & Vacances: cadena francesa, clientes independientes 🇫🇷, sin transfer incluido
-    { nombre:"Pierre & Vacances",         pais:"🇫🇷", pct:85, transfer:0.0, estrellas:3 },
+    { nombre:"Pierre & Vacances",         nacs:[{nacs:[{pais:"🇫🇷",pct:85}]},{nacs:[{pais:"🇧🇪",pct:15}]}], transfer:0.0, estrellas:3 },
     // Roc Cala'n Blanes (Nicolaus Club): Thomas Cook / Condor, clientela 🇩🇪
-    { nombre:"Roc Cala'n Blanes Beach",   pais:"🇩🇪", pct:60, transfer:0.6, estrellas:3 },
+    { nombre:"Roc Cala'n Blanes Beach",   nacs:[{nacs:[{pais:"🇩🇪",pct:60}]},{nacs:[{pais:"🇬🇧",pct:40}]}], transfer:0.6, estrellas:3 },
     // Oasis Park (Roc Hotels): tour operadores franceses, clientes independientes 🇫🇷
-    { nombre:"Oasis Park",                pais:"🇫🇷", pct:75, transfer:0.0, estrellas:3 },
+    { nombre:"Oasis Park",                nacs:[{nacs:[{pais:"🇫🇷",pct:75}]},{nacs:[{pais:"🇧🇪",pct:25}]}], transfer:0.0, estrellas:3 },
     // Apartamentos Vista Blanes: sin tour op, mix 🇬🇧🇩🇪
-    { nombre:"Aptos. Vista Blanes",       pais:"🇬🇧", pct:45, transfer:0.0, estrellas:2 },
+    { nombre:"Aptos. Vista Blanes",       nacs:[{nacs:[{pais:"🇬🇧",pct:50}]},{nacs:[{pais:"🇩🇪",pct:50}]}], transfer:0.0, estrellas:2 },
   ],
   // ── PERIMETRAL ────────────────────────────────────────────────
   perimetral: [
     // Hotel Rural Sant Ignasi: On The Beach + independientes, mix 🇬🇧🇪🇸, sin autocar
-    { nombre:"Hotel Rural Sant Ignasi",   pais:"🇬🇧", pct:50, transfer:0.0, estrellas:4 },
+    { nombre:"Hotel Rural Sant Ignasi",   nacs:[{nacs:[{pais:"🇬🇧",pct:50}]},{nacs:[{pais:"🇪🇸",pct:50}]}], transfer:0.0, estrellas:4 },
     // Hotel Alfons: independiente, clientela mayoritariamente 🇪🇸🇩🇪
-    { nombre:"Hotel Alfons",              pais:"🇩🇪", pct:50, transfer:0.0, estrellas:3 },
+    { nombre:"Hotel Alfons",              nacs:[{nacs:[{pais:"🇩🇪",pct:55}]},{nacs:[{pais:"🇪🇸",pct:45}]}], transfer:0.0, estrellas:3 },
     // Morvedra Nou: agroturismo rural, mix europeo independiente 🇩🇪🇫🇷
-    { nombre:"Morvedra Nou Rural Hotel",  pais:"🇩🇪", pct:50, transfer:0.0, estrellas:4 },
+    { nombre:"Morvedra Nou Rural Hotel",  nacs:[{nacs:[{pais:"🇩🇪",pct:50}]},{nacs:[{pais:"🇫🇷",pct:50}]}], transfer:0.0, estrellas:4 },
     // Agroturismo Ses Talaies: rural, clientela independiente 🇫🇷🇩🇪
-    { nombre:"Agroturismo Ses Talaies",   pais:"🇫🇷", pct:50, transfer:0.0, estrellas:4 },
+    { nombre:"Agroturismo Ses Talaies",   nacs:[{nacs:[{pais:"🇫🇷",pct:55}]},{nacs:[{pais:"🇩🇪",pct:45}]}], transfer:0.0, estrellas:4 },
   ],
   // ── MOLINO ───────────────────────────────────────────────────
   molino: [
     // Club Ciudadela Aparthotel: TUI, clientela 🇬🇧, transfer parcial
-    { nombre:"Club Ciudadela Aparthotel", pais:"🇬🇧", pct:55, transfer:0.6, estrellas:3 },
+    { nombre:"Club Ciudadela Aparthotel", nacs:[{nacs:[{pais:"🇬🇧",pct:55}]},{nacs:[{pais:"🇩🇪",pct:45}]}], transfer:0.6, estrellas:3 },
     // Apartamentos Maribel: sin tour op, mix 🇩🇪🇬🇧
-    { nombre:"Apartamentos Maribel",      pais:"🇩🇪", pct:50, transfer:0.0, estrellas:3 },
+    { nombre:"Apartamentos Maribel",      nacs:[{nacs:[{pais:"🇩🇪",pct:55}]},{nacs:[{pais:"🇬🇧",pct:45}]}], transfer:0.0, estrellas:3 },
     // Hotel Faustino Gran (Relais & Châteaux): lujo, clientela independiente 🇫🇷🇩🇪, sin autocar
-    { nombre:"Hotel Can Faustino (Relais & Ch.)", pais:"🇫🇷", pct:60, transfer:0.0, estrellas:5 },
+    { nombre:"Hotel Can Faustino (Relais & Ch.)", nacs:[{nacs:[{pais:"🇫🇷",pct:60}]},{nacs:[{pais:"🇩🇪",pct:25}]},{nacs:[{pais:"🇬🇧",pct:15}]}], transfer:0.0, estrellas:5 },
   ],
   // ── PINOS ────────────────────────────────────────────────────
   pinos: [
     // Hotel Menorca Patricia: independiente, clientela 🇪🇸🇫🇷, sin transfer
-    { nombre:"Hotel Menorca Patricia",    pais:"🇪🇸", pct:55, transfer:0.0, estrellas:3 },
+    { nombre:"Hotel Menorca Patricia",    nacs:[{nacs:[{pais:"🇪🇸",pct:55}]},{nacs:[{pais:"🇫🇷",pct:45}]}], transfer:0.0, estrellas:3 },
     // Seth Port Ciutadella: Jet2, clientela 🇬🇧🇪🇸, autocar incluido
-    { nombre:"Seth Port Ciutadella",      pais:"🇬🇧", pct:50, transfer:1.0, estrellas:4 },
+    { nombre:"Seth Port Ciutadella",      nacs:[{nacs:[{pais:"🇬🇧",pct:55}]},{nacs:[{pais:"🇪🇸",pct:45}]}], transfer:1.0, estrellas:4 },
     // Hotel Port Ciutadella: TUI, clientela 🇬🇧🇩🇪, autocar incluido
-    { nombre:"Hotel Port Ciutadella",     pais:"🇬🇧", pct:50, transfer:1.0, estrellas:4 },
+    { nombre:"Hotel Port Ciutadella",     nacs:[{nacs:[{pais:"🇬🇧",pct:50}]},{nacs:[{pais:"🇩🇪",pct:50}]}], transfer:1.0, estrellas:4 },
     // Apartamentos Talayot: sin tour op, mix 🇬🇧🇩🇪
-    { nombre:"Apartamentos Talayot",      pais:"🇬🇧", pct:45, transfer:0.0, estrellas:3 },
+    { nombre:"Apartamentos Talayot",      nacs:[{nacs:[{pais:"🇬🇧",pct:50}]},{nacs:[{pais:"🇩🇪",pct:50}]}], transfer:0.0, estrellas:3 },
     // Apartamentos Sol Ponent: sin tour op, 🇩🇪🇬🇧
-    { nombre:"Apartamentos Sol Ponent",   pais:"🇩🇪", pct:55, transfer:0.0, estrellas:2 },
+    { nombre:"Apartamentos Sol Ponent",   nacs:[{nacs:[{pais:"🇩🇪",pct:55}]},{nacs:[{pais:"🇬🇧",pct:45}]}], transfer:0.0, estrellas:2 },
     // Cales de Ponent: muy valorado, mix 🇪🇸🇩🇪, sin transfer
-    { nombre:"Apartaments Cales de Ponent",pais:"🇩🇪",pct:50, transfer:0.0, estrellas:3 },
+    { nombre:"Apartaments Cales de Ponent",nacs:[{nacs:[{pais:"🇩🇪",pct:50}]},{nacs:[{pais:"🇫🇷",pct:50}]}], transfer:0.0, estrellas:3 },
   ],
   // ── SA CALETA / CALA SANTANDRIA ──────────────────────────────
   sa_caleta: [
     // Gran Sagitario: TUI + Jet2, 🇬🇧🇩🇪, transfer autocar
-    { nombre:"Hotel Gran Sagitario",      pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    { nombre:"Hotel Gran Sagitario",      nacs:[{nacs:[{pais:"🇬🇧",pct:55}]},{nacs:[{pais:"🇩🇪",pct:45}]}], transfer:1.0, estrellas:4 },
     // Petit Sagitario: Jet2, adults only, 🇬🇧🇫🇷
-    { nombre:"Petit Sagitario",           pais:"🇬🇧", pct:50, transfer:1.0, estrellas:4 },
+    { nombre:"Petit Sagitario",           nacs:[{nacs:[{pais:"🇬🇧",pct:55}]},{nacs:[{pais:"🇫🇷",pct:45}]}], transfer:1.0, estrellas:4 },
     // Prinsotel La Caleta: TUI, 🇩🇪🇬🇧, transfer autocar
-    { nombre:"Prinsotel La Caleta",       pais:"🇩🇪", pct:55, transfer:1.0, estrellas:4 },
+    { nombre:"Prinsotel La Caleta",       nacs:[{nacs:[{pais:"🇩🇪",pct:55}]},{nacs:[{pais:"🇬🇧",pct:45}]}], transfer:1.0, estrellas:4 },
     // Vibra Blanc Palace: mix tour op, 🇩🇪🇬🇧
-    { nombre:"Vibra Blanc Palace",        pais:"🇩🇪", pct:50, transfer:0.6, estrellas:4 },
+    { nombre:"Vibra Blanc Palace",        nacs:[{nacs:[{pais:"🇩🇪",pct:50}]},{nacs:[{pais:"🇬🇧",pct:50}]}], transfer:0.6, estrellas:4 },
     // Hotel Playa Santandria: TUI, adults only, 🇬🇧
-    { nombre:"Hotel Playa Santandria",    pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    { nombre:"Hotel Playa Santandria",    nacs:[{nacs:[{pais:"🇬🇧",pct:60}]},{nacs:[{pais:"🇩🇪",pct:40}]}], transfer:1.0, estrellas:4 },
     // Hotel Bahia: sin tour op, 🇩🇪🇪🇸
-    { nombre:"Hotel Bahia",               pais:"🇩🇪", pct:45, transfer:0.0, estrellas:3 },
+    { nombre:"Hotel Bahia",               nacs:[{nacs:[{pais:"🇩🇪",pct:50}]},{nacs:[{pais:"🇪🇸",pct:50}]}], transfer:0.0, estrellas:3 },
   ],
   // ── CALA BLANCA ──────────────────────────────────────────────
   cala_blanca: [
     // Sagitario Playa: TUI + Jet2, 🇬🇧🇩🇪, transfer autocar
-    { nombre:"Hotel Sagitario Playa",     pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    { nombre:"Hotel Sagitario Playa",     nacs:[{nacs:[{pais:"🇬🇧",pct:55}]},{nacs:[{pais:"🇩🇪",pct:45}]}], transfer:1.0, estrellas:4 },
     // Apartamentos Blancala: sin tour op, 🇫🇷🇩🇪
-    { nombre:"Apartamentos Blancala",     pais:"🇫🇷", pct:55, transfer:0.0, estrellas:3 },
+    { nombre:"Apartamentos Blancala",     nacs:[{nacs:[{pais:"🇫🇷",pct:55}]},{nacs:[{pais:"🇩🇪",pct:45}]}], transfer:0.0, estrellas:3 },
     // Vestige Son Vell (rural, zona Cala Blanca): lujo francés 🇫🇷, sin transfer autocar
-    { nombre:"Vestige Son Vell",          pais:"🇫🇷", pct:75, transfer:0.0, estrellas:5 },
+    { nombre:"Vestige Son Vell",          nacs:[{nacs:[{pais:"🇫🇷",pct:75}]},{nacs:[{pais:"🇩🇪",pct:25}]}], transfer:0.0, estrellas:5 },
     // Grupotel Tamariscos: Jet2 + TUI, 🇬🇧🇩🇪
-    { nombre:"Grupotel Tamariscos",       pais:"🇬🇧", pct:50, transfer:1.0, estrellas:3 },
+    { nombre:"Grupotel Tamariscos",       nacs:[{nacs:[{pais:"🇬🇧",pct:55}]},{nacs:[{pais:"🇩🇪",pct:45}]}], transfer:1.0, estrellas:3 },
   ],
   // ── CALEN BOSCH / SON XORIGUER ───────────────────────────────
   calen_bosch: [
     // Grupotel Turquesa Mar (TUI BLUE): TUI EXCLUSIVO, 🇬🇧, transfer 100% autocar
-    { nombre:"Grupotel Club Turquesa Mar",pais:"🇬🇧", pct:90, transfer:1.0, estrellas:4 },
+    { nombre:"Grupotel Club Turquesa Mar",nacs:[{nacs:[{pais:"🇬🇧",pct:90}]},{nacs:[{pais:"🇩🇪",pct:10}]}], transfer:1.0, estrellas:4 },
     // Grupotel Club Menorca: Jet2 + TUI, 🇩🇪🇬🇧
-    { nombre:"Grupotel Club Menorca",     pais:"🇩🇪", pct:65, transfer:1.0, estrellas:3 },
+    { nombre:"Grupotel Club Menorca",     nacs:[{nacs:[{pais:"🇩🇪",pct:65}]},{nacs:[{pais:"🇬🇧",pct:35}]}], transfer:1.0, estrellas:3 },
     // Grupotel Aldea Cala'n Bosch: TUI, 🇩🇪
-    { nombre:"Grupotel Aldea Cala'n Bosch",pais:"🇩🇪",pct:60, transfer:1.0, estrellas:4 },
+    { nombre:"Grupotel Aldea Cala'n Bosch",nacs:[{nacs:[{pais:"🇩🇪",pct:60}]},{nacs:[{pais:"🇬🇧",pct:40}]}], transfer:1.0, estrellas:4 },
     // Grupotel Playa Club: TUI + Jet2, 🇬🇧🇩🇪
-    { nombre:"Grupotel Playa Club",       pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    { nombre:"Grupotel Playa Club",       nacs:[{nacs:[{pais:"🇬🇧",pct:60}]},{nacs:[{pais:"🇩🇪",pct:40}]}], transfer:1.0, estrellas:4 },
     // MarSenses Paradise Club: Jet2 + TUI, 🇬🇧, último drop-off autocar
-    { nombre:"MarSenses Paradise Club",   pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    { nombre:"MarSenses Paradise Club",   nacs:[{nacs:[{pais:"🇬🇧",pct:60}]},{nacs:[{pais:"🇩🇪",pct:40}]}], transfer:1.0, estrellas:4 },
     // Fergus Style Carema Beach: TUI, 🇬🇧
-    { nombre:"Fergus Style Carema Beach", pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    { nombre:"Fergus Style Carema Beach", nacs:[{nacs:[{pais:"🇬🇧",pct:60}]},{nacs:[{pais:"🇩🇪",pct:40}]}], transfer:1.0, estrellas:4 },
     // Sol Falcó Menorca: Jet2 + TUI, 🇬🇧
-    { nombre:"Sol Falcó Menorca",         pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    { nombre:"Sol Falcó Menorca",         nacs:[{nacs:[{pais:"🇬🇧",pct:55}]},{nacs:[{pais:"🇩🇪",pct:45}]}], transfer:1.0, estrellas:4 },
     // Zafiro Menorca: Jet2, 🇬🇧
-    { nombre:"Zafiro Menorca",            pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    { nombre:"Zafiro Menorca",            nacs:[{nacs:[{pais:"🇬🇧",pct:55}]},{nacs:[{pais:"🇩🇪",pct:45}]}], transfer:1.0, estrellas:4 },
     // Valentin Star Menorca: Jet2 + TUI, adults only, 🇬🇧
-    { nombre:"Valentin Star Menorca",     pais:"🇬🇧", pct:60, transfer:1.0, estrellas:4 },
+    { nombre:"Valentin Star Menorca",     nacs:[{nacs:[{pais:"🇬🇧",pct:65}]},{nacs:[{pais:"🇩🇪",pct:35}]}], transfer:1.0, estrellas:4 },
     // La Quinta Menorca PortBlue: Jet2, 🇬🇧
-    { nombre:"La Quinta Menorca PortBlue",pais:"🇬🇧", pct:50, transfer:1.0, estrellas:5 },
+    { nombre:"La Quinta Menorca PortBlue",nacs:[{nacs:[{pais:"🇬🇧",pct:55}]},{nacs:[{pais:"🇩🇪",pct:45}]}], transfer:1.0, estrellas:5 },
     // Lago Resort: Jet2, 🇬🇧, transfer autocar confirmado en reseñas
-    { nombre:"Lago Resort Menorca",       pais:"🇬🇧", pct:55, transfer:1.0, estrellas:5 },
+    { nombre:"Lago Resort Menorca",       nacs:[{nacs:[{pais:"🇬🇧",pct:60}]},{nacs:[{pais:"🇩🇪",pct:40}]}], transfer:1.0, estrellas:5 },
     // Sagitario Princesa Playa: Jet2, 🇬🇧
-    { nombre:"Sagitario Princesa Playa",  pais:"🇬🇧", pct:55, transfer:1.0, estrellas:4 },
+    { nombre:"Sagitario Princesa Playa",  nacs:[{nacs:[{pais:"🇬🇧",pct:60}]},{nacs:[{pais:"🇩🇪",pct:40}]}], transfer:1.0, estrellas:4 },
     // RV Hotels Sea Club: Condor / Eurowings Holidays, 🇩🇪, transfer parcial
-    { nombre:"RV Hotels Sea Club",        pais:"🇩🇪", pct:55, transfer:0.6, estrellas:4 },
+    { nombre:"RV Hotels Sea Club",        nacs:[{nacs:[{pais:"🇩🇪",pct:55}]},{nacs:[{pais:"🇬🇧",pct:45}]}], transfer:0.6, estrellas:4 },
     // Nuramar Aparthotel: sin tour op exclusivo, 🇩🇪🇬🇧
-    { nombre:"Nuramar Aparthotel",        pais:"🇩🇪", pct:50, transfer:0.0, estrellas:3 },
+    { nombre:"Nuramar Aparthotel",        nacs:[{nacs:[{pais:"🇩🇪",pct:55}]},{nacs:[{pais:"🇬🇧",pct:45}]}], transfer:0.0, estrellas:3 },
   ],
 };
 
@@ -402,9 +402,21 @@ function redondear15(m) { return Math.round(m/15)*15; }
 function ahora() { const d=new Date(); return d.getHours()*60+d.getMinutes(); }
 
 function slotRecogida(horaVuelo) {
-  // vuelo - 60min check-in - 45min trayecto = recogida
-  const min = horaAMin(horaVuelo) - 60 - 45;
+  // Punto medio del rango: vuelo - 90min (media entre 1h y 2h de antelación) - 45min trayecto
+  const min = horaAMin(horaVuelo) - 90 - 45;
   return redondear15(min);
+}
+
+function rangoRecogida(horaVuelo) {
+  // Rango: el cliente puede salir entre 1h y 2h antes del vuelo
+  // → recogida mínima: vuelo - 120min - 45min = vuelo - 165min
+  // → recogida máxima: vuelo - 60min  - 45min = vuelo - 105min
+  const base = horaAMin(horaVuelo) - 45;
+  return {
+    min: base - 120,  // 2h antes del vuelo
+    max: base - 60,   // 1h antes del vuelo
+    medio: base - 90, // punto medio (1h30)
+  };
 }
 
 // ── fecha ──
@@ -461,7 +473,7 @@ function calcularActividad(slotMin) {
   if (!vuelos.length) return 0;
   let total = 0;
   vuelos.forEach(v => {
-    const rec = slotRecogida(v.hora);
+    const rango = rangoRecogida(v.hora);
     const delta = Math.abs(slotMin - rec);
     if (delta <= 15) {
       const peso = 1 - delta/30;
@@ -504,11 +516,16 @@ function probParada(paradaId, slotMin) {
   // 5★ → x1.45  |  4★ → x1.20  |  3★ → x1.00  |  2★ → x0.80  |  sin dato → x1.00
   let factorCalidad = 1.0;
   if (hs.length > 0) {
-    const pesoTotal = hs.reduce((s, h) => s + (h.pct||50), 0);
+    // peso del hotel = suma de pct de sus nacionalidades (o 100 si tiene nacs)
+    const pesoTotal = hs.reduce((s, h) => {
+      const pesoH = h.nacs ? h.nacs.reduce((a,n) => a + n.pct, 0) : (h.pct||50);
+      return s + pesoH;
+    }, 0);
     const calidad = hs.reduce((s, h) => {
       const stars = h.estrellas || 3;
       const mult = stars === 5 ? 1.45 : stars === 4 ? 1.20 : stars === 3 ? 1.00 : 0.80;
-      return s + mult * (h.pct||50);
+      const pesoH = h.nacs ? h.nacs.reduce((a,n) => a + n.pct, 0) : (h.pct||50);
+      return s + mult * pesoH;
     }, 0);
     factorCalidad = pesoTotal > 0 ? calidad / pesoTotal : 1.0;
   }
@@ -519,11 +536,15 @@ function probParada(paradaId, slotMin) {
   // transfer 0.0 = independiente    → sin reducción
   let factorTransfer = 1.0;
   if (hs.length > 0) {
-    const pesoTotal = hs.reduce((s, h) => s + (h.pct||50), 0);
+    const pesoTotal = hs.reduce((s, h) => {
+      const pesoH = h.nacs ? h.nacs.reduce((a,n) => a + n.pct, 0) : (h.pct||50);
+      return s + pesoH;
+    }, 0);
     const reduccion = hs.reduce((s, h) => {
       const tf = h.transfer !== undefined ? h.transfer : 0.0;
       const reduccionHotel = tf === 1.0 ? 0.65 : tf === 0.6 ? 0.30 : 0.0;
-      return s + reduccionHotel * (h.pct||50);
+      const pesoH = h.nacs ? h.nacs.reduce((a,n) => a + n.pct, 0) : (h.pct||50);
+      return s + reduccionHotel * pesoH;
     }, 0);
     const reduccionMedia = pesoTotal > 0 ? reduccion / pesoTotal : 0;
     factorTransfer = 1.0 - reduccionMedia;
@@ -531,10 +552,13 @@ function probParada(paradaId, slotMin) {
 
   // ── contribución de vuelos ─────────────────────────────────
   vuelos.forEach(v => {
-    const rec = slotRecogida(v.hora);
-    const delta = Math.abs(slotMin - rec);
-    if (delta > 30) return;
-    const peso = 1 - delta/30;
+    const rango = rangoRecogida(v.hora);
+    // El slot está dentro del rango de recogida probable (±15min de margen extra)
+    if (slotMin < rango.min - 15 || slotMin > rango.max + 15) return;
+    // Peso máximo en el centro del rango, decrece hacia los extremos
+    const distCentro = Math.abs(slotMin - rango.medio);
+    const anchura = (rango.max - rango.min) / 2 + 15;
+    const peso = Math.max(0, 1 - distCentro / anchura);
     const destIATA = v.destino_iata || "";
     let matchScore = 0;
 
@@ -542,11 +566,14 @@ function probParada(paradaId, slotMin) {
       matchScore = 0.4;
     } else {
       hs.forEach(h => {
-        const dests = PAIS_DESTINOS[h.pais] || [];
-        if (dests.includes(destIATA)) {
-          const pctH = (h.pct || 50) / 100;
-          matchScore += pctH * 0.7;
-        }
+        const nacs = h.nacs || [{pais: h.pais, pct: h.pct||50}];
+        nacs.forEach(n => {
+          const dests = PAIS_DESTINOS[n.pais] || [];
+          if (dests.includes(destIATA)) {
+            const pctN = n.pct / 100;
+            matchScore += pctN * 0.7;
+          }
+        });
       });
     }
     base += peso * matchScore;
@@ -598,8 +625,8 @@ function renderParadas() {
 
 function getVuelosActivos(slotMin) {
   return vuelos.filter(v => {
-    const rec = slotRecogida(v.hora);
-    return Math.abs(slotMin - rec) <= 15;
+    const rango = rangoRecogida(v.hora);
+    return slotMin >= rango.min - 15 && slotMin <= rango.max + 15;
   });
 }
 
@@ -643,9 +670,9 @@ const IATA_PAIS = {
 };
 
 function parsearVuelosAPI(data) {
-  console.log("[TaxiMAH] Respuesta API:", JSON.stringify(data).substring(0, 200));
+  console.log("[TaxiCiuta] Respuesta API:", JSON.stringify(data).substring(0, 200));
   if (!data || !data.departures) {
-    console.warn("[TaxiMAH] Sin campo 'departures' en respuesta");
+    console.warn("[TaxiCiuta] Sin campo 'departures' en respuesta");
     return [];
   }
   return data.departures
@@ -683,7 +710,7 @@ async function cargarVuelos() {
     const fechaISO = `${hoy.getFullYear()}-${pad(hoy.getMonth()+1)}-${pad(hoy.getDate())}`;
     const fromLocal = `${fechaISO}T00:00`;
     const toLocal   = `${fechaISO}T23:59`;
-    console.log("[TaxiMAH] Consultando vuelos:", fromLocal, "→", toLocal);
+    console.log("[TaxiCiuta] Consultando vuelos:", fromLocal, "→", toLocal);
 
     const apiUrl = `https://aerodatabox.p.rapidapi.com/flights/airports/icao/${AIRPORT_ICAO}/${fromLocal}/${toLocal}?withLeg=true&direction=Departure&withCancelled=false&withCodeshared=false&withCargo=false&withPrivate=false`;
 
@@ -715,7 +742,7 @@ async function cargarVuelos() {
       `✓ Datos reales · AeroDataBox · ${vuelos.length} vuelos hoy · <span style="color:var(--muted)">${fechaISO}</span>`;
 
   } catch (err) {
-    console.error("[TaxiMAH] Error API:", err.message);
+    console.error("[TaxiCiuta] Error API:", err.message);
     vuelos = VUELOS_FALLBACK;
     document.getElementById("api-note").innerHTML =
       `⚠ Error API · Datos de ejemplo · <span style="color:var(--muted);font-size:11px">${err.message}</span>`;
@@ -768,7 +795,7 @@ function renderTabVuelos() {
         </div>
       </div>
       <div class="vuelo-row-bot">
-        <span class="tag tag-recogida">Recogida ~${minAHora(rec)}</span>
+        <span class="tag tag-recogida">Recogida ${minAHora(rango.min)}–${minAHora(rango.max)}</span>
         <span class="tag tag-pais">${v.pais_flag||""} ${FLAG_NOMBRES[v.pais_flag]||""}</span>
       </div>
     </div>`;
@@ -786,11 +813,13 @@ function renderConfig() {
       const tfIcon = tf === 1.0 ? '🚌' : tf === 0.6 ? '🚌~' : '';
       const stars = h.estrellas || 3;
       const starsStr = '★'.repeat(stars);
+      const nacs = h.nacs || [{pais: h.pais, pct: h.pct||50}];
+      const nacsStr = nacs.map(n => `${n.pais} ${n.pct}%`).join(' · ');
       return `<div class="hotel-item">
-        <span class="hotel-pais">${h.pais}</span>
-        <span class="hotel-name">${h.nombre}</span>
-        <span class="hotel-pct" style="font-size:11px;color:var(--amber)">${starsStr}</span>
-        <span class="hotel-pct">${tfIcon} ${h.pct||50}%</span>
+        <span class="hotel-name" style="flex:1">${h.nombre}</span>
+        <span style="font-size:11px;color:var(--amber);margin-right:4px">${starsStr}</span>
+        <span style="font-size:11px;color:var(--muted);margin-right:4px">${nacsStr}</span>
+        <span style="font-size:11px;color:var(--muted);margin-right:6px">${tfIcon}</span>
         <button class="hotel-del" onclick="delHotel('${p.id}',${i})">×</button>
       </div>`;
     }).join("");
@@ -806,22 +835,30 @@ function renderConfig() {
       </div>
       <div class="config-parada-body" id="cfg-${p.id}">
         ${hotelItems || '<p style="font-size:12px;color:var(--muted);padding:6px 0">Sin hoteles. Añade uno:</p>'}
-        <div class="add-hotel-row">
-          <input type="text" id="hn-${p.id}" placeholder="Nombre hotel">
-          <select id="hp-${p.id}">${flagOptions}</select>
-          <input type="number" id="hpct-${p.id}" placeholder="%" min="1" max="100" style="max-width:56px">
-          <select id="htf-${p.id}" style="max-width:90px;font-size:11px">
-            <option value="0">Sin transfer</option>
-            <option value="0.6">Transfer parcial</option>
-            <option value="1">Autocar TUI/Jet2</option>
-          </select>
-          <select id="hst-${p.id}" style="max-width:60px;font-size:11px" title="Categoría hotel">
-            <option value="2">2★</option>
-            <option value="3" selected>3★</option>
-            <option value="4">4★</option>
-            <option value="5">5★</option>
-          </select>
-          <button class="btn-add" onclick="addHotel('${p.id}')">+ Añadir</button>
+        <div class="add-hotel-row" style="flex-direction:column;align-items:stretch;gap:6px">
+          <input type="text" id="hn-${p.id}" placeholder="Nombre del hotel">
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <select id="htf-${p.id}" style="flex:1;min-width:100px;font-size:12px">
+              <option value="0">Sin transfer</option>
+              <option value="0.6">Transfer parcial</option>
+              <option value="1">🚌 Autocar TUI/Jet2</option>
+            </select>
+            <select id="hst-${p.id}" style="flex:1;min-width:60px;font-size:12px">
+              <option value="2">2★</option>
+              <option value="3" selected>3★</option>
+              <option value="4">4★</option>
+              <option value="5">5★</option>
+            </select>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Nacionalidades:</div>
+          <div id="nac-rows-${p.id}">
+            <div class="nac-row nac-row-${p.id}" style="display:flex;gap:6px;margin-bottom:4px">
+              <select class="nac-pais" style="flex:1;font-size:12px">${flagOptions}</select>
+              <input class="nac-pct" type="number" placeholder="%" min="1" max="100" value="100" style="width:56px;font-size:12px">
+              <button onclick="addNacRow('${p.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--accent2);padding:4px 8px;cursor:pointer;font-size:13px">+</button>
+            </div>
+          </div>
+          <button class="btn-add" onclick="addHotel('${p.id}')">+ Añadir hotel</button>
         </div>
       </div>
     </div>`;
@@ -835,17 +872,43 @@ function toggleConfig(id) {
 
 function addHotel(paradaId) {
   const nombre = document.getElementById("hn-"+paradaId).value.trim();
-  const pais = document.getElementById("hp-"+paradaId).value;
-  const pct = parseInt(document.getElementById("hpct-"+paradaId).value) || 50;
   const transfer = parseFloat(document.getElementById("htf-"+paradaId).value) || 0.0;
+  const estrellas = parseInt(document.getElementById("hst-"+paradaId).value) || 3;
   if (!nombre) return;
+  // Recoger todas las filas de nacionalidad añadidas
+  const nacRows = document.querySelectorAll(\`.nac-row-\${paradaId}\`);
+  const nacs = [];
+  nacRows.forEach(row => {
+    const pais = row.querySelector(".nac-pais").value;
+    const pct = parseInt(row.querySelector(".nac-pct").value) || 50;
+    nacs.push({pais, pct});
+  });
+  if (nacs.length === 0) {
+    // al menos una nacionalidad por defecto
+    nacs.push({pais: document.getElementById("hp-"+paradaId).value, pct: 100});
+  }
   if (!hoteles[paradaId]) hoteles[paradaId] = [];
-  hoteles[paradaId].push({ nombre, pais, pct, transfer, estrellas: parseInt(document.getElementById('hst-'+paradaId).value)||3 });
+  hoteles[paradaId].push({ nombre, nacs, transfer, estrellas });
   saveHoteles(hoteles);
   renderConfig();
   document.getElementById("cfg-"+paradaId).classList.add("open");
   // actualizar predicción
   renderParadas();
+}
+
+function addNacRow(paradaId) {
+  const flagOptions = Object.keys(PAIS_DESTINOS).map(f =>
+    `<option value="${f}">${f} ${FLAG_NOMBRES[f]||""}</option>`
+  ).join("");
+  const container = document.getElementById("nac-rows-"+paradaId);
+  const div = document.createElement("div");
+  div.className = `nac-row nac-row-${paradaId}`;
+  div.style = "display:flex;gap:6px;margin-bottom:4px";
+  div.innerHTML = `
+    <select class="nac-pais" style="flex:1;font-size:12px">${flagOptions}</select>
+    <input class="nac-pct" type="number" placeholder="%" min="1" max="100" value="50" style="width:56px;font-size:12px">
+    <button onclick="this.parentElement.remove()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 8px;cursor:pointer;font-size:13px">×</button>`;
+  container.appendChild(div);
 }
 
 function delHotel(paradaId, idx) {
@@ -947,12 +1010,12 @@ function vigilarProximasFranjas() {
       notificadosHoy.add(key);
       const msg = `Posiciónate en <strong>${top.nombre}</strong> — ${Math.round(top.prob*100)}% de probabilidad en ${minRestantes} min.`;
       mostrarToast(`Franja ${key}`, msg, true, 10000);
-      enviarNotificacionNativa("🚨 TaxiMAH · Alta demanda", `${key} · ${top.nombre} · ${Math.round(top.prob*100)}%`);
+      enviarNotificacionNativa("🚨 TaxiCiuta · Alta demanda", `${key} · ${top.nombre} · ${Math.round(top.prob*100)}%`);
     } else if (top.prob >= UMBRAL_ALTO && minRestantes <= 45) {
       notificadosHoy.add(key);
       const msg = `Franja <strong>${key}</strong> — ${top.nombre} con ${Math.round(top.prob*100)}% de prob. en ${minRestantes} min.`;
       mostrarToast(`Próxima oportunidad`, msg, false, 7000);
-      enviarNotificacionNativa("📍 TaxiMAH · Demanda elevada", `${key} · ${top.nombre} · ${Math.round(top.prob*100)}%`);
+      enviarNotificacionNativa("📍 TaxiCiuta · Demanda elevada", `${key} · ${top.nombre} · ${Math.round(top.prob*100)}%`);
     }
   });
 }
