@@ -730,29 +730,41 @@ async function cargarVuelos() {
 
 async function _fetchAPI(fechaISO) {
   try {
-    // Formato exacto requerido por AeroDataBox: YYYY-MM-DDTHH:mm
-    const fromLocal = `${fechaISO}T00:00`;
-    const toLocal   = `${fechaISO}T23:59`;
-    // Parámetros mínimos y correctos — sin withCodeshared que causa 400
-    const apiUrl = `https://aerodatabox.p.rapidapi.com/flights/airports/icao/${AIRPORT_ICAO}/${fromLocal}/${toLocal}?direction=Departure&withCancelled=false&withCargo=false&withPrivate=false`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    const res = await fetch(apiUrl, {
-      method: "GET",
-      signal: controller.signal,
-      headers: {
-        "x-rapidapi-host": "aerodatabox.p.rapidapi.com",
-        "x-rapidapi-key": RAPIDAPI_KEY,
+    // AeroDataBox permite máximo 12h por llamada — hacemos dos: mañana y tarde
+    const headers = {
+      "x-rapidapi-host": "aerodatabox.p.rapidapi.com",
+      "x-rapidapi-key": RAPIDAPI_KEY,
+    };
+    const base = `https://aerodatabox.p.rapidapi.com/flights/airports/icao/${AIRPORT_ICAO}`;
+    const params = `?direction=Departure&withCancelled=false&withCargo=false&withPrivate=false`;
+
+    async function fetchRango(from, to) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      const res = await fetch(`${base}/${from}/${to}${params}`, {
+        method: "GET", signal: controller.signal, headers
+      });
+      clearTimeout(timeout);
+      if (!res.ok) {
+        let errBody = ""; try { errBody = await res.text(); } catch(e) {}
+        throw new Error(`HTTP ${res.status}${errBody ? ": " + errBody.substring(0,120) : ""}`);
       }
-    });
-    clearTimeout(timeout);
-    if (!res.ok) {
-      // Leer el cuerpo del error para diagnóstico
-      let errBody = "";
-      try { errBody = await res.text(); } catch(e) {}
-      throw new Error(`HTTP ${res.status}${errBody ? ": " + errBody.substring(0,100) : ""}`);
+      return res.json();
     }
-    const data = await res.json();
+
+    // Dos llamadas en paralelo: 00:00–11:59 y 12:00–23:59
+    const [data1, data2] = await Promise.all([
+      fetchRango(`${fechaISO}T00:00`, `${fechaISO}T11:59`),
+      fetchRango(`${fechaISO}T12:00`, `${fechaISO}T23:59`),
+    ]);
+
+    // Combinar resultados
+    const data = {
+      departures: [
+        ...(data1.departures || []),
+        ...(data2.departures || []),
+      ]
+    };
     const parsed = parsearVuelosAPI(data);
     if (!parsed.length) throw new Error("Sin vuelos");
     vuelos = parsed;
