@@ -191,7 +191,7 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:v
 
     <div class="vuelos-titulo">Vuelos que generan demanda en esta franja</div>
     <div class="vuelo-chips" id="vuelo-chips-activos">
-      <span class="vuelo-chip none">Cargando vuelos…</span>
+      <span class="vuelo-chip none">–</span>
     </div>
 
     <div class="insight" id="insight-box">Analizando datos de vuelos…</div>
@@ -204,7 +204,7 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:v
   <!-- TAB: VUELOS -->
   <div class="content section" id="tab-vuelos">
     <div class="slot-label">Salidas de hoy desde Menorca (MAH)</div>
-    <div id="vuelos-list"><div class="empty"><span class="spinner"></span>Cargando vuelos…</div></div>
+    <div id="vuelos-list"><div class="empty">–</div></div>
     <p class="vuelo-api-note" id="api-note"></p>
   </div>
 
@@ -714,11 +714,16 @@ async function cargarVuelos() {
     }
   } catch(e) {}
 
-  // ── 2. Sin caché: mostrar fallback inmediatamente y cargar API en paralelo ──
-  vuelos = VUELOS_FALLBACK;
+  // ── 2. Sin caché: mostrar spinner y cargar API ──
+  vuelos = [];
   document.getElementById("api-note").innerHTML =
-    `<span class="spinner"></span> Cargando vuelos…`;
-  _renderTodo();
+    `<span class="spinner"></span> Conectando con AeroDataBox…`;
+  document.getElementById("vuelos-list").innerHTML =
+    `<div class="empty"><span class="spinner"></span>Cargando vuelos reales…</div>`;
+  document.getElementById("vuelo-chips-activos").innerHTML =
+    `<span class="vuelo-chip none"><span class="spinner"></span>Esperando vuelos…</span>`;
+  // Mostrar franjas vacías mientras carga
+  renderSlots();
 
   _fetchAPI(fechaISO);
 }
@@ -727,15 +732,19 @@ async function _fetchAPI(fechaISO) {
   try {
     const fromLocal = `${fechaISO}T00:00`;
     const toLocal   = `${fechaISO}T23:59`;
-    // Parámetros mínimos necesarios para reducir tamaño de respuesta
     const apiUrl = `https://aerodatabox.p.rapidapi.com/flights/airports/icao/${AIRPORT_ICAO}/${fromLocal}/${toLocal}?withLeg=false&direction=Departure&withCancelled=false&withCodeshared=true&withCargo=false&withPrivate=false`;
+    // Timeout de 8 segundos para no bloquear la app
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(apiUrl, {
       method: "GET",
+      signal: controller.signal,
       headers: {
         "x-rapidapi-host": "aerodatabox.p.rapidapi.com",
         "x-rapidapi-key": RAPIDAPI_KEY,
       }
     });
+    clearTimeout(timeout);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     const parsed = parsearVuelosAPI(data);
@@ -749,10 +758,23 @@ async function _fetchAPI(fechaISO) {
       `✓ Datos reales · ${vuelos.length} vuelos · <span style="color:var(--muted)">${fechaISO}</span>`;
     _renderTodo();
   } catch (err) {
-    vuelos = VUELOS_FALLBACK;
+    vuelos = [];
+    const msg = err.name === 'AbortError'
+      ? 'Sin respuesta (>8s) · revisa tu conexión'
+      : err.message;
     document.getElementById("api-note").innerHTML =
-      `⚠ Error API · Datos de ejemplo · <span style="color:var(--muted);font-size:11px">${err.message}</span>`;
-    _renderTodo();
+      `⚠ No se pudieron cargar los vuelos · <span style="color:var(--muted);font-size:11px">${msg}</span>`;
+    document.getElementById("vuelos-list").innerHTML =
+      `<div class="empty" style="color:var(--red)">⚠ Sin conexión con AeroDataBox<br>
+       <span style="font-size:12px;color:var(--muted)">Comprueba tu conexión e inténtalo de nuevo</span><br><br>
+       <button onclick="location.reload()" style="background:var(--accent);border:none;border-radius:8px;color:#fff;padding:8px 16px;font-size:13px;cursor:pointer">Reintentar</button>
+       </div>`;
+    document.getElementById("vuelo-chips-activos").innerHTML =
+      `<span class="vuelo-chip none">Sin datos de vuelos</span>`;
+    // Renderizar predicción vacía
+    renderSlots();
+    renderParadas();
+    renderVueloChips(activeSlot);
   }
 }
 
@@ -772,27 +794,15 @@ function _renderTodo() {
   renderVueloChips(activeSlot);
 }
 
-// datos de respaldo si la API no responde
-const VUELOS_FALLBACK = [
-  { hora:"07:05", destino:"Barcelona (BCN)", destino_iata:"BCN", aerolinea:"Vueling", pais_flag:"🇪🇸" },
-  { hora:"08:20", destino:"Paris Orly (ORY)", destino_iata:"ORY", aerolinea:"Transavia", pais_flag:"🇫🇷" },
-  { hora:"09:10", destino:"Manchester (MAN)", destino_iata:"MAN", aerolinea:"Ryanair", pais_flag:"🇬🇧" },
-  { hora:"10:00", destino:"Frankfurt (FRA)", destino_iata:"FRA", aerolinea:"Condor", pais_flag:"🇩🇪" },
-  { hora:"10:45", destino:"Londres Gatwick (LGW)", destino_iata:"LGW", aerolinea:"EasyJet", pais_flag:"🇬🇧" },
-  { hora:"12:15", destino:"París CDG (CDG)", destino_iata:"CDG", aerolinea:"Air France", pais_flag:"🇫🇷" },
-  { hora:"13:40", destino:"Berlín (BER)", destino_iata:"BER", aerolinea:"Eurowings", pais_flag:"🇩🇪" },
-  { hora:"14:25", destino:"Birmingham (BHX)", destino_iata:"BHX", aerolinea:"Jet2", pais_flag:"🇬🇧" },
-  { hora:"17:20", destino:"Londres Stansted (STN)", destino_iata:"STN", aerolinea:"Ryanair", pais_flag:"🇬🇧" },
-  { hora:"18:05", destino:"Lyon (LYS)", destino_iata:"LYS", aerolinea:"Transavia", pais_flag:"🇫🇷" },
-  { hora:"19:00", destino:"Barcelona (BCN)", destino_iata:"BCN", aerolinea:"Vueling", pais_flag:"🇪🇸" },
-  { hora:"20:30", destino:"Manchester (MAN)", destino_iata:"MAN", aerolinea:"EasyJet", pais_flag:"🇬🇧" },
-];
+// Sin datos de ejemplo — solo vuelos reales de AeroDataBox
 
 function renderTabVuelos() {
   const now = ahora();
   const list = document.getElementById("vuelos-list");
+  // Si aún está cargando (vuelos = fallback y API en curso) no sobreescribir el spinner
+  if (!list) return;
   list.innerHTML = vuelos.map(v => {
-    const rec = slotRecogida(v.hora);
+    const rango = rangoRecogida(v.hora);
     const isPast = horaAMin(v.hora) < now;
     return `<div class="vuelo-row" style="${isPast?'opacity:0.45':''}">
       <div class="vuelo-row-top">
@@ -808,7 +818,6 @@ function renderTabVuelos() {
       </div>
     </div>`;
   }).join("");
-
 }
 
 // ── config paradas ──
