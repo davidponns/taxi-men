@@ -172,9 +172,9 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:v
   </div>
 
   <nav class="nav">
-    <button class="nav-btn active" onclick="switchTab('prediccion')">Predicción</button>
-    <button class="nav-btn" onclick="switchTab('vuelos')">Vuelos</button>
-    <button class="nav-btn" onclick="switchTab('paradas')">Mis paradas</button>
+    <button class="nav-btn active" onclick="switchTab('prediccion', this)">Predicción</button>
+    <button class="nav-btn" onclick="switchTab('vuelos', this)">Vuelos</button>
+    <button class="nav-btn" onclick="switchTab('paradas', this)">Mis paradas</button>
   </nav>
 
   <!-- TAB: PREDICCIÓN -->
@@ -643,7 +643,11 @@ const IATA_PAIS = {
 };
 
 function parsearVuelosAPI(data) {
-  if (!data || !data.departures) return [];
+  console.log("[TaxiMAH] Respuesta API:", JSON.stringify(data).substring(0, 200));
+  if (!data || !data.departures) {
+    console.warn("[TaxiMAH] Sin campo 'departures' en respuesta");
+    return [];
+  }
   return data.departures
     .filter(f => f.departure?.scheduledTimeLocal && f.arrival?.airport?.iata)
     .map(f => {
@@ -675,9 +679,11 @@ async function cargarVuelos() {
     // construir rango horario: hoy 00:00 → mañana 00:00 (local Menorca, UTC+2 en verano)
     const hoy = new Date();
     const pad = n => String(n).padStart(2,"0");
+    // Usar hora local del dispositivo (Menorca = Europe/Madrid)
     const fechaISO = `${hoy.getFullYear()}-${pad(hoy.getMonth()+1)}-${pad(hoy.getDate())}`;
     const fromLocal = `${fechaISO}T00:00`;
     const toLocal   = `${fechaISO}T23:59`;
+    console.log("[TaxiMAH] Consultando vuelos:", fromLocal, "→", toLocal);
 
     const apiUrl = `https://aerodatabox.p.rapidapi.com/flights/airports/icao/${AIRPORT_ICAO}/${fromLocal}/${toLocal}?withLeg=true&direction=Departure&withCancelled=false&withCodeshared=false&withCargo=false&withPrivate=false`;
 
@@ -709,11 +715,10 @@ async function cargarVuelos() {
       `✓ Datos reales · AeroDataBox · ${vuelos.length} vuelos hoy · <span style="color:var(--muted)">${fechaISO}</span>`;
 
   } catch (err) {
-    console.warn("AeroDataBox error:", err.message);
-    // fallback a datos de ejemplo si la API falla
+    console.error("[TaxiMAH] Error API:", err.message);
     vuelos = VUELOS_FALLBACK;
     document.getElementById("api-note").innerHTML =
-      `⚠ Sin conexión a API · Mostrando datos de ejemplo · <span style="color:var(--muted)">${err.message}</span>`;
+      `⚠ Error API · Datos de ejemplo · <span style="color:var(--muted);font-size:11px">${err.message}</span>`;
   }
 
   renderTabVuelos();
@@ -777,7 +782,6 @@ function renderConfig() {
   cont.innerHTML = PARADAS_BASE.map(p => {
     const hs = hoteles[p.id] || [];
     const hotelItems = hs.map((h, i) => {
-      const tf = h.transfer !== undefined ? h.transfer : 0.0;
       const tf = h.transfer !== undefined ? h.transfer : 0.0;
       const tfIcon = tf === 1.0 ? '🚌' : tf === 0.6 ? '🚌~' : '';
       const stars = h.estrellas || 3;
@@ -852,11 +856,11 @@ function delHotel(paradaId, idx) {
 }
 
 // ── tabs ──
-function switchTab(tab) {
+function switchTab(tab, btn) {
   document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
   document.getElementById("tab-"+tab).classList.add("active");
-  event.target.classList.add("active");
+  if (btn) btn.classList.add("active");
 }
 
 
