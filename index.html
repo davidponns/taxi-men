@@ -474,7 +474,7 @@ function calcularActividad(slotMin) {
   let total = 0;
   vuelos.forEach(v => {
     const rango = rangoRecogida(v.hora);
-    const delta = Math.abs(slotMin - rec);
+    const delta = Math.abs(slotMin - rango.medio);
     if (delta <= 15) {
       const peso = 1 - delta/30;
       const paradas = paradasAfectadas(v);
@@ -486,18 +486,20 @@ function calcularActividad(slotMin) {
 
 function paradasAfectadas(vuelo) {
   const destIATA = vuelo.destino_iata || "";
+  const aerolineaLower = (vuelo.aerolinea || "").toLowerCase();
   const afectadas = [];
   PARADAS_BASE.forEach(p => {
     const hs = hoteles[p.id] || [];
     if (!hs.length) return;
-    // hay hotel cuyo país va a ese destino
     const match = hs.some(h => {
-      const dests = PAIS_DESTINOS[h.pais] || [];
-      return dests.includes(destIATA) || dests.some(d => vuelo.aerolinea_lower?.includes("vueling") && ["MAD","BCN"].includes(d));
+      const nacs = h.nacs || (h.pais ? [{pais: h.pais, pct: h.pct||50}] : []);
+      return nacs.some(n => {
+        const dests = PAIS_DESTINOS[n.pais] || [];
+        return dests.includes(destIATA) || (aerolineaLower.includes("vueling") && ["MAD","BCN"].includes(destIATA));
+      });
     });
     if (match) afectadas.push(p.id);
   });
-  // si no hay hoteles configurados, afecta todas
   if (!afectadas.length && hs_vacío()) return PARADAS_BASE.map(p=>p.id);
   return afectadas;
 }
@@ -670,19 +672,18 @@ const IATA_PAIS = {
 };
 
 function parsearVuelosAPI(data) {
-  // Loguear estructura para diagnóstico
   const keys = data ? Object.keys(data) : [];
   console.log("[TaxiCiuta] Campos respuesta API:", keys);
 
-  // AeroDataBox puede devolver 'departures', 'flights' o array directo
   const lista = data?.departures || data?.flights || (Array.isArray(data) ? data : null);
 
   if (!lista || !lista.length) {
-    console.warn("[TaxiCiuta] Sin vuelos. Estructura recibida:", JSON.stringify(data).substring(0, 300));
+    console.warn("[TaxiCiuta] Sin vuelos. Estructura completa:", JSON.stringify(data).substring(0, 500));
     return [];
   }
 
-  console.log("[TaxiCiuta] Vuelos encontrados:", lista.length, "— primer item:", JSON.stringify(lista[0]).substring(0,200));
+  console.log("[TaxiCiuta] Vuelos encontrados:", lista.length);
+  console.log("[TaxiCiuta] Primer vuelo (raw):", JSON.stringify(lista[0], null, 2).substring(0, 600));
 
   return lista
     .filter(f => {
@@ -934,8 +935,7 @@ function addHotel(paradaId) {
     nacs.push({pais, pct});
   });
   if (nacs.length === 0) {
-    // al menos una nacionalidad por defecto
-    nacs.push({pais: document.getElementById("hp-"+paradaId).value, pct: 100});
+    nacs.push({pais: "🇬🇧", pct: 100});
   }
   if (!hoteles[paradaId]) hoteles[paradaId] = [];
   hoteles[paradaId].push({ nombre, nacs, transfer, estrellas });
